@@ -60,6 +60,11 @@ public class tk2dAnimatedSprite : tk2dSprite
 	/// Time into the current clip. This is in clip local time (i.e. (int)clipTime = currentFrame)
 	/// </summary>
     float clipTime = 0.0f;
+
+	/// <summary>
+	/// This is the frame rate of the current clip. Can be changed dynamicaly, as clipTime is accumulated time in real time.
+	/// </summary>
+    float clipFps = -1.0f;
 	
 	/// <summary>
 	/// Previous frame identifier
@@ -191,7 +196,23 @@ public class tk2dAnimatedSprite : tk2dSprite
 	/// </summary>
 	public float ClipTimeSeconds
 	{
-		get { return clipTime / currentClip.fps; }	
+		get { return (clipFps > 0.0f) ? (clipTime / clipFps) : (clipTime / currentClip.fps); }
+	}
+	
+	/// <summary>
+	/// Current frame rate of the playing clip. May have been overriden by the user.
+	/// Set to 0 to default to the clips fps
+	/// </summary>
+	public float ClipFps
+	{
+		get { return clipFps; }
+		set 
+		{ 
+			if (currentClip != null)
+			{
+				clipFps = (value > 0) ? value : currentClip.fps;
+			}
+		}
 	}
 	
 	/// <summary>
@@ -300,21 +321,37 @@ public class tk2dAnimatedSprite : tk2dSprite
 	public void Play(int clipId, float clipStartTime)
 	{
 		this.clipId = clipId;
-		Play(anim.clips[clipId], clipStartTime);
+		Play(anim.clips[clipId], clipStartTime, DefaultFps);
 	}
+
+	public static float DefaultFps { get { return 0; } }
 
 	/// <summary>
 	/// Play the clip specified by identifier.
 	/// Will restart the clip at clipStartTime if called while the clip is playing.
 	/// </summary>
 	/// <param name='clip'>The clip to play. </param>	
-	/// <param name='clipStartTime'> Clip start time in seconds. A value of 0 will start the clip from the beginning </param>
+	/// <param name='clipStartTime'> Clip start time in seconds. A value of DefaultFps will start the clip from the beginning </param>
 	public void Play(tk2dSpriteAnimationClip clip, float clipStartTime)
+	{
+		Play(clip, clipStartTime, DefaultFps);
+	}
+
+	/// <summary>
+	/// Play the clip specified by identifier.
+	/// Will restart the clip at clipStartTime if called while the clip is playing.
+	/// No defaults to play nice with default MonoDevelop configuration.
+	/// </summary>
+	/// <param name='clip'>The clip to play. </param>	
+	/// <param name='clipStartTime'> Clip start time in seconds. A value of DefaultFps will start the clip from the beginning </param>
+	/// <param name='overrideFps'> Overriden framerate of clip. Set to 0 to use default </param>
+	public void Play(tk2dSpriteAnimationClip clip, float clipStartTime, float overrideFps)
 	{
 		if (clip != null)
 		{
 			state |= State.Playing;
 			currentClip = clip;
+			clipFps = (overrideFps > 0.0f)?overrideFps:currentClip.fps;
 
 			// Simply swap, no animation is played
 			if (currentClip.wrapMode == tk2dSpriteAnimationClip.WrapMode.Single || currentClip.frames == null)
@@ -337,8 +374,8 @@ public class tk2dAnimatedSprite : tk2dSprite
 			{
 				// clipStartTime is in seconds
 				// clipTime is in clip local time (ignoring fps)
-				float time = clipStartTime * currentClip.fps;
-				if (currentClip.wrapMode == tk2dSpriteAnimationClip.WrapMode.Once && time >= currentClip.fps * currentClip.frames.Length)
+				float time = clipStartTime * clipFps;
+				if (currentClip.wrapMode == tk2dSpriteAnimationClip.WrapMode.Once && time >= clipFps * currentClip.frames.Length)
 				{
 					// warp to last frame
 					WarpClipToLocalTime(currentClip, currentClip.frames.Length - 1);
@@ -448,7 +485,7 @@ public class tk2dAnimatedSprite : tk2dSprite
 			return;
 
 		// Current clip should not be null at this point
-		clipTime += Time.deltaTime * currentClip.fps;
+		clipTime += Time.deltaTime * clipFps;
 		int _previousFrame = previousFrame;
 		
 		switch (currentClip.wrapMode)

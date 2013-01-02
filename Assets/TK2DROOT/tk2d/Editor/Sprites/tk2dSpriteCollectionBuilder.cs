@@ -1215,7 +1215,19 @@ public class tk2dSpriteCollectionBuilder
 				var atlasEntry = packers[0].FindEntryWithIndex(glyphSprite.atlasIndex);
 				
 				c.texOffsetX = glyphSprite.rx;
-				c.texOffsetY = glyphSprite.ry;
+
+				if (font.flipTextureY)
+				{
+					// This is the offset from the bottom of the font
+					c.texOffsetY = glyphSprite.ry;
+				}
+				else
+				{
+					// ry is offset from top, we want offset from bottom
+					// height is the original glyph height before cropping, the remainder of which is
+					// the offset from bottom
+					c.texOffsetY = c.height - glyphSprite.rh - glyphSprite.ry;
+				}
 				
 				c.texX = atlasEntry.x + padAmount;
 				c.texY = atlasEntry.y + padAmount;
@@ -1240,7 +1252,7 @@ public class tk2dSpriteCollectionBuilder
 			c.texOverride = true;
 		}
 		
-		tk2dEditor.Font.Builder.BuildFont(fontInfo, font.data, scale, font.charPadX, font.dupeCaps, false, font.gradientTexture, font.gradientCount);
+		tk2dEditor.Font.Builder.BuildFont(fontInfo, font.data, scale, font.charPadX, font.dupeCaps, font.flipTextureY, font.gradientTexture, font.gradientCount);
 	}
 	
     static void UpdateVertexCache(tk2dSpriteCollection gen, float scale, tk2dEditor.Atlas.Data[] packers, tk2dSpriteCollectionData coll, List<SpriteLut> spriteLuts)

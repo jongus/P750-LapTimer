@@ -288,7 +288,7 @@ public class tk2dTileMapSceneGUI
 		case EventType.MouseDown:
 		case EventType.MouseDrag:
 			if ((controlEventType == EventType.MouseDrag && GUIUtility.hotControl != controlID) ||
-				Event.current.button != 0)
+				(Event.current.button != 0 && Event.current.button != 1))
 			{
 				return;
 			}
@@ -300,6 +300,7 @@ public class tk2dTileMapSceneGUI
 				if (IsCursorInside() && !Event.current.shift)
 				{
 					bool pickupKeyDown = (Application.platform == RuntimePlatform.OSXEditor)?Event.current.control:Event.current.alt;
+					if (Event.current.button == 1) pickupKeyDown = true;
 					bool eraseKeyDown = false;
 					if (Application.platform == RuntimePlatform.OSXEditor)
 					{
@@ -341,7 +342,7 @@ public class tk2dTileMapSceneGUI
 			break;
 			
 		case EventType.MouseUp:
-			if (Event.current.button == 0 && GUIUtility.hotControl == controlID)
+			if ((Event.current.button == 0 || Event.current.button == 1) && GUIUtility.hotControl == controlID)
 			{
 				GUIUtility.hotControl = 0;
 				

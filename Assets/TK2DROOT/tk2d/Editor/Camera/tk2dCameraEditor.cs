@@ -17,6 +17,8 @@ public class tk2dCameraEditor : Editor
 	Preset[] presets = new Preset[] {
 		new Preset("iOS/iPhone 3G Tall", 320, 480),
 		new Preset("iOS/iPhone 3G Wide", 480, 320),
+		new Preset("iOS/iPhone 5 Tall", 640, 1136),
+		new Preset("iOS/iPhone 5 Wide", 1136, 640),
 		new Preset("iOS/iPhone 4 Tall", 640, 960),
 		new Preset("iOS/iPhone 4 Wide", 960, 640),
 		new Preset("iOS/iPad Tall", 768, 1024),
@@ -102,13 +104,22 @@ public class tk2dCameraEditor : Editor
 					ovr.scale = EditorGUILayout.FloatField("Scale", ovr.scale);
 					EditorGUI.indentLevel--;
 				}
-				ovr.fitMode = (tk2dCameraResolutionOverride.FitMode)EditorGUILayout.EnumPopup("Fit Mode", ovr.fitMode);
-				if (ovr.fitMode == tk2dCameraResolutionOverride.FitMode.Constant)
+				if (ovr.autoScaleMode == tk2dCameraResolutionOverride.AutoScaleMode.StretchToFit)
 				{
-					EditorGUI.indentLevel++;
-					ovr.offsetPixels.x = EditorGUILayout.FloatField("X", ovr.offsetPixels.x);
-					ovr.offsetPixels.y = EditorGUILayout.FloatField("Y", ovr.offsetPixels.y);
-					EditorGUI.indentLevel--;
+					string msg = "The native resolution image will be stretched to fit the target display. " +
+					"Image quality will suffer if non-uniform scaling occurs.";
+					tk2dGuiUtility.InfoBox(msg, tk2dGuiUtility.WarningLevel.Info);
+				}
+				else
+				{
+					ovr.fitMode = (tk2dCameraResolutionOverride.FitMode)EditorGUILayout.EnumPopup("Fit Mode", ovr.fitMode);
+					if (ovr.fitMode == tk2dCameraResolutionOverride.FitMode.Constant)
+					{
+						EditorGUI.indentLevel++;
+						ovr.offsetPixels.x = EditorGUILayout.FloatField("X", ovr.offsetPixels.x);
+						ovr.offsetPixels.y = EditorGUILayout.FloatField("Y", ovr.offsetPixels.y);
+						EditorGUI.indentLevel--;
+					}
 				}
 				GUILayout.BeginHorizontal();
 				EditorGUILayout.PrefixLabel(" ");

@@ -246,7 +246,8 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	/// <param name='name'>Case sensitive sprite name, as defined in the sprite collection. This is usually the source filename excluding the extension</param>
 	public int GetSpriteIdByName(string name)
 	{
-		return Collection.GetSpriteIdByName(name);
+		InitInstance();
+		return collectionInst.GetSpriteIdByName(name);
 	}
 	
 	/// <summary>
@@ -264,11 +265,13 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	
 	protected int GetNumVertices()
 	{
+		InitInstance();
 		return collectionInst.spriteDefinitions[spriteId].positions.Length;
 	}
 	
 	protected int GetNumIndices()
 	{
+		InitInstance();
 		return collectionInst.spriteDefinitions[spriteId].indices.Length;
 	}
 	
@@ -319,6 +322,7 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	/// </returns>
 	public Bounds GetBounds()
 	{
+		InitInstance();
 		var sprite = collectionInst.spriteDefinitions[_spriteId];
 		return new Bounds(new Vector3(sprite.boundsData[0].x * _scale.x, sprite.boundsData[0].y * _scale.y, sprite.boundsData[0].z * _scale.z),
 		                  new Vector3(sprite.boundsData[1].x * _scale.x, sprite.boundsData[1].y * _scale.y, sprite.boundsData[1].z * _scale.z));
@@ -333,6 +337,7 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	/// </returns>
 	public Bounds GetUntrimmedBounds()
 	{
+		InitInstance();
 		var sprite = collectionInst.spriteDefinitions[_spriteId];
 		return new Bounds(new Vector3(sprite.untrimmedBoundsData[0].x * _scale.x, sprite.untrimmedBoundsData[0].y * _scale.y, sprite.untrimmedBoundsData[0].z * _scale.z),
 		                  new Vector3(sprite.untrimmedBoundsData[1].x * _scale.x, sprite.untrimmedBoundsData[1].y * _scale.y, sprite.untrimmedBoundsData[1].z * _scale.z));

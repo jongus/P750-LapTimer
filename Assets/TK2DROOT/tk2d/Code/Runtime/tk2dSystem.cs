@@ -89,7 +89,12 @@ public class tk2dSystem : ScriptableObject
 		set 
 		{ 
 			if (value != currentPlatform)
+			{
+#if UNITY_EDITOR
+				currentPlatformInitialized = true;
+#endif
 				currentPlatform = value; 
+			}
 		}
 	}
 

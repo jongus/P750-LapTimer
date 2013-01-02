@@ -39,7 +39,8 @@ public class tk2dCameraResolutionOverride
 		None, // explicitly use the scale parameter
 		FitWidth, // fits the width to the current resolution
 		FitHeight, // fits the height to the current resolution
-		FitVisible // best fit (either width or height)
+		FitVisible, // best fit (either width or height)
+		StretchToFit, // stretch to fit, could be non-uniform and/or very ugly
 	};
 	public AutoScaleMode autoScaleMode = AutoScaleMode.None;
 	
@@ -76,7 +77,13 @@ public class tk2dCamera : MonoBehaviour
 	public tk2dCameraResolutionOverride[] resolutionOverride = null;
 	tk2dCameraResolutionOverride currentResolutionOverride = null;
 	
+	/// <summary>
+	/// Native resolution width of the camera. Override this in the inspector.
+	/// </summary>
 	public int nativeResolutionWidth = 960;
+	/// <summary>
+	/// Native resolution height of the camera. Override this in the inspector.
+	/// </summary>
 	public int nativeResolutionHeight = 640;
 	public bool enableResolutionOverrides = true;
 	
@@ -169,6 +176,13 @@ public class tk2dCamera : MonoBehaviour
 	public void UpdateCameraMatrix()
 	{
 		inst = this;
+
+		if (!mainCamera.orthographic)
+		{
+			// Must be orthographic
+			Debug.LogError("tk2dCamera must be orthographic");
+			mainCamera.orthographic = true;
+		}
 		
 		float pixelWidth = mainCamera.pixelWidth;
 		float pixelHeight = mainCamera.pixelHeight;
@@ -207,56 +221,71 @@ public class tk2dCamera : MonoBehaviour
 			}
 		}
 		
-		float scale;
-		Vector2 offset;
-		if (currentResolutionOverride == null)
-		{
-			scale = 1.0f;
-			offset = new Vector2(0, 0);
-		}
-		else
+		Vector2 scale = new Vector2(1, 1);
+		Vector2 offset = new Vector2(0, 0);
+		float s = 0.0f;
+		if (currentResolutionOverride != null)
 		{
 			switch (currentResolutionOverride.autoScaleMode)
 			{
-			case tk2dCameraResolutionOverride.AutoScaleMode.FitHeight: scale = pixelHeight / nativeResolutionHeight; break;
-			case tk2dCameraResolutionOverride.AutoScaleMode.FitWidth: scale = pixelWidth / nativeResolutionWidth; break;
+			case tk2dCameraResolutionOverride.AutoScaleMode.FitHeight: 
+				s = pixelHeight / nativeResolutionHeight; 
+				scale.Set(s, s);
+				break;
+
+			case tk2dCameraResolutionOverride.AutoScaleMode.FitWidth: 
+				s = pixelWidth / nativeResolutionWidth; 
+				scale.Set(s, s);
+				break;
+
 			case tk2dCameraResolutionOverride.AutoScaleMode.FitVisible:
 				float nativeAspect = (float)nativeResolutionWidth / nativeResolutionHeight;
 				float currentAspect = pixelWidth / pixelHeight;
 				if (currentAspect < nativeAspect)
-					scale = pixelWidth / nativeResolutionWidth;
+					s = pixelWidth / nativeResolutionWidth;
 				else
-					scale = pixelHeight / nativeResolutionHeight;
+					s = pixelHeight / nativeResolutionHeight;
+				scale.Set(s, s);
 				break;
+
+			case tk2dCameraResolutionOverride.AutoScaleMode.StretchToFit:
+				scale.Set(pixelWidth / nativeResolutionWidth, pixelHeight / nativeResolutionHeight);
+				break;
+
 			default:
 			case tk2dCameraResolutionOverride.AutoScaleMode.None: 
-				scale = currentResolutionOverride.scale; break;
+				s = currentResolutionOverride.scale;
+				scale.Set(s, s);
+				break;
 			}
 			
-			switch (currentResolutionOverride.fitMode)
+			// no offset when ScaleToFit
+			if (currentResolutionOverride.autoScaleMode != tk2dCameraResolutionOverride.AutoScaleMode.StretchToFit)
 			{
-			case tk2dCameraResolutionOverride.FitMode.Center:
-				offset = new Vector2(Mathf.Round((nativeResolutionWidth  * scale - pixelWidth ) / 2.0f), 
-									 Mathf.Round((nativeResolutionHeight * scale - pixelHeight) / 2.0f));
-				break;
-				
-			default:
-			case tk2dCameraResolutionOverride.FitMode.Constant: 
-				offset = -currentResolutionOverride.offsetPixels; break;
+				switch (currentResolutionOverride.fitMode)
+				{
+				case tk2dCameraResolutionOverride.FitMode.Center:
+					offset = new Vector2(Mathf.Round((nativeResolutionWidth  * scale.x - pixelWidth ) / 2.0f), 
+										 Mathf.Round((nativeResolutionHeight * scale.y - pixelHeight) / 2.0f));
+					break;
+					
+				default:
+				case tk2dCameraResolutionOverride.FitMode.Constant: 
+					offset = -currentResolutionOverride.offsetPixels; break;
+				}
 			}
 		}
 		
 		float left = offset.x, bottom = offset.y;
 		float right = pixelWidth + offset.x, top = pixelHeight + offset.y;
-
-		_screenExtents.Set(left / scale, top / scale, (right - left) / scale, (bottom - top) / scale);
+		_screenExtents.Set(left / scale.x, top / scale.y, (right - left) / scale.x, (bottom - top) / scale.y);
 
 		float far = mainCamera.farClipPlane;
 		float near = mainCamera.near;
 		
 		// set up externally used variables
 		orthoSize = (top - bottom) / 2.0f;
-		_scaledResolution = new Vector2(right / scale, top / scale);
+		_scaledResolution = new Vector2(right / scale.x, top / scale.y);
 		_screenOffset = offset;
 		
 		// Additional half texel offset
@@ -270,21 +299,21 @@ public class tk2dCamera : MonoBehaviour
 						   Application.platform == RuntimePlatform.WindowsEditor);
 		
 		float halfTexelOffsetAmount = (halfTexelOffset)?1.0f:0.0f;
-		
-		float x =  (2.0f) / (right - left) * scale;
-		float y = (2.0f) / (top - bottom) * scale;
+
+		float x =  (2.0f) / (right - left) * scale.x;
+		float y = (2.0f) / (top - bottom) * scale.y;
 		float z = -2.0f / (far - near);
 
 		float a = -(right + left + halfTexelOffsetAmount) / (right - left);
 		float b = -(bottom + top - halfTexelOffsetAmount) / (top - bottom);
-		float c = -(2.0f * far * near) / (far - near);
+		float c = -(far + near) / (far - near);
 		
 		Matrix4x4 m = new Matrix4x4();
 		m[0,0] = x;  m[0,1] = 0;  m[0,2] = 0;  m[0,3] = a;
 		m[1,0] = 0;  m[1,1] = y;  m[1,2] = 0;  m[1,3] = b;
 		m[2,0] = 0;  m[2,1] = 0;  m[2,2] = z;  m[2,3] = c;
 		m[3,0] = 0;  m[3,1] = 0;  m[3,2] = 0;  m[3,3] = 1;
-		
+
 		mainCamera.projectionMatrix = m;			
 	}
 }

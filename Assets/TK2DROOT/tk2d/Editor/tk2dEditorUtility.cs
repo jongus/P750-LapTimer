@@ -6,7 +6,7 @@ using System.IO;
 public static class tk2dEditorUtility
 {
 	public static double version = 1.8;
-	public static int releaseId = 1; // < -10000 = alpha, other negative = beta release, 0 = final, positive = final patch
+	public static int releaseId = 3; // < -10000 = alpha, other negative = beta release, 0 = final, positive = final patch
 	
 	public static string ReleaseStringIdentifier(double _version, int _releaseId)
 	{
@@ -56,6 +56,7 @@ public static class tk2dEditorUtility
 	public static void RebuildIndex()
 	{
 		AssetDatabase.DeleteAsset(indexPath);
+		AssetDatabase.Refresh();
 		CreateIndex();
 
 		// Now rebuild system object

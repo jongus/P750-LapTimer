@@ -139,6 +139,12 @@ namespace tk2dEditor.SpriteCollectionBuilder
 						param.regionH = (int)(param.regionH * scale);
 					}
 
+					if (param.anchor == tk2dSpriteCollectionDefinition.Anchor.Custom)
+					{
+						param.anchorX = (int)(param.anchorX * scale);
+						param.anchorY = (int)(param.anchorY * scale);
+					}
+
 					if (param.customSpriteGeometry)
 					{
 						foreach (tk2dSpriteColliderIsland geom in param.geometryIslands)

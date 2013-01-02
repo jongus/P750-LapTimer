@@ -376,7 +376,9 @@ public class tk2dSpriteCollectionData : MonoBehaviour
 			for (int i = 0; i < materials.Length; ++i)
 			{
 				materialInsts[i] = Instantiate(materials[i]) as Material;
+#if UNITY_EDITOR
 				materialInsts[i].hideFlags = HideFlags.DontSave;
+#endif
 			}
 			for (int i = 0; i < spriteDefinitions.Length; ++i)
 			{

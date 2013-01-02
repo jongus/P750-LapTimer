@@ -264,11 +264,8 @@ namespace tk2dEditor.Font
 					xoffset = 0;
 					yoffset = 0;
 				}
-	
-	            // precompute required data
-	            float px = xoffset * scale;
-	            float py = (lineHeight - yoffset) * scale;
-				
+
+				// precompute required data
 				if (theChar.texOverride)
 				{
 					int w = theChar.texW;
@@ -279,16 +276,38 @@ namespace tk2dEditor.Font
 						w = theChar.texH;
 					}
 					
-		            thisChar.p0 = new Vector3(px + theChar.texOffsetX * scale, py - theChar.texOffsetY * scale, 0);
-		            thisChar.p1 = new Vector3(px + (theChar.texOffsetX + w) * scale, py - (theChar.texOffsetY + h) * scale, 0);
+		            float px = (xoffset + theChar.texOffsetX) * scale;
+					float py = (lineHeight - yoffset - theChar.texOffsetY) * scale;
+					
+		            thisChar.p0 = new Vector3(px, py , 0);
+		            thisChar.p1 = new Vector3(px + w * scale, py - h * scale, 0);
 	
 					thisChar.uv0 = new Vector2((theChar.texX) / texWidth, (theChar.texY + theChar.texH) / texHeight);
 		            thisChar.uv1 = new Vector2((theChar.texX + theChar.texW) / texWidth, (theChar.texY) / texHeight);
+		            if (flipTextureY)
+		            {
+		            	float tmp = 0;
+						if (theChar.texFlipped)
+						{
+							tmp = thisChar.uv1.x;
+							thisChar.uv1.x = thisChar.uv0.x;
+							thisChar.uv0.x = tmp;
+						}
+						else
+						{
+	 						tmp = thisChar.uv1.y;
+			            	thisChar.uv1.y = thisChar.uv0.y;
+			            	thisChar.uv0.y = tmp;							
+						}
+		            }
 					
 					thisChar.flipped = theChar.texFlipped;
 				}
 				else
 				{
+		            float px = xoffset * scale;
+		            float py = (lineHeight - yoffset) * scale;
+					
 		            thisChar.p0 = new Vector3(px, py, 0);
 		            thisChar.p1 = new Vector3(px + width * scale, py - height * scale, 0);
 					if (flipTextureY)
