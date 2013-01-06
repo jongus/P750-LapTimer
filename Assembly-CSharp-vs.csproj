@@ -44,8 +44,9 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Init.cs" />
-     <Compile Include="Assets\Scripts\Main.cs" />
+     <Compile Include="Assets\Scripts\scriptInit.cs" />
+     <Compile Include="Assets\Scripts\scriptMain.cs" />
+     <Compile Include="Assets\Scripts\scriptTest.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Code\Camera\tk2dCamera.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Code\Camera\tk2dCameraAnchor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Code\Fonts\tk2dFont.cs" />
