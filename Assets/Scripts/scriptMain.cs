@@ -7,17 +7,55 @@ public class scriptMain : MonoBehaviour {
 	private string sStatus = "-";
 	private LocationInfo liOld;
 	private LocationInfo liNew;
-	private tk2dTextMesh tmStatus;
-	private tk2dTextMesh tmLatLon;
+	
+	private Color cRed = new Color(255.0f, 124.0f, 108.0f, 255.0f);
+	private Color cBlue = new Color(62.0f, 190.0f, 255.0f, 255.0f);
+	private Color cGrey = new Color(162.0f, 178.0f, 191.0f, 255.0f);
+	private Color cWhite = new Color(255.0f, 255.0f, 255.0f, 255.0f);
+	
+	private tk2dTextMesh tmStatus; //DEBUG
+	private tk2dTextMesh tmMaxSpeed;
+	private tk2dTextMesh tmAvgSpeed;
+	private tk2dTextMesh tmCurSpeed;
+	private tk2dTextMesh tmLapNumber;
+	private tk2dTextMesh tmLapTime;
+	private tk2dTextMesh tmGPS;
+	private tk2dTextMesh tmBigInfo;
+	private tk2dTextMesh tmBigInfoCaption;
+	
 	
 	 
 	// Start is called just before any of the
 	// Update methods is called the first time.
 	void Start () {
-		// First, check if user has location service enabled
-    	tmStatus = GameObject.Find ("tmStatus").GetComponent<tk2dTextMesh>();
-		tmLatLon = GameObject.Find ("tmLatLon").GetComponent<tk2dTextMesh>();
+		// Grab all textmeshes we gonna change
+    	tmStatus = GameObject.Find ("tmStatus").GetComponent<tk2dTextMesh>(); //DEBUG
+		tmMaxSpeed = GameObject.Find ("tmMaxSpeed").GetComponent<tk2dTextMesh>();
+		tmAvgSpeed = GameObject.Find ("tmAvgSpeed").GetComponent<tk2dTextMesh>();
+		tmCurSpeed = GameObject.Find ("tmCurSpeed").GetComponent<tk2dTextMesh>();
+		tmLapNumber = GameObject.Find ("tmLapNumber").GetComponent<tk2dTextMesh>();
+		tmLapTime = GameObject.Find ("tmLapTime").GetComponent<tk2dTextMesh>();
+		tmGPS = GameObject.Find ("tmGPS").GetComponent<tk2dTextMesh>();
+		tmBigInfo = GameObject.Find ("tmBigInfo").GetComponent<tk2dTextMesh>();
+		tmBigInfoCaption = GameObject.Find ("tmBigInfoCaption").GetComponent<tk2dTextMesh>();
+		
+		
 		Input.location.Start(1.0f, 1.0f);
+		
+		DisableUI ();
+	}
+	
+	void DisableUI() {
+		tk2dTextMesh[] tms = (tk2dTextMesh)GameObject.FindGameObjectsWithTag("EnableDisableText");
+		
+		foreach (GameObject tm in tms) {
+			
+			
+				
+				tm.color = cRed;
+				tm.Commit();
+			
+		}
 	}
 	
 	// Update is called every frame, if the
@@ -27,20 +65,20 @@ public class scriptMain : MonoBehaviour {
 		
 		//tmLatLon.text = Input.location.lastData.latitude.ToString ();
 		if(GpsStatusOkey() == 2){
-			tmLatLon.text = liNew.latitude.ToString () + "\n" + 
+			/*tmLatLon.text = liNew.latitude.ToString () + "\n" + 
 				liNew.longitude.ToString () + "\n" +
 					liNew.horizontalAccuracy.ToString() + "\n" +
 					liNew.timestamp.ToString()  + "\n" +
-					NowInEpoch ();
+					NowInEpoch (); */
 		} else if(GpsStatusOkey() == 1) {
-			tmLatLon.text = "ORANGE" + "\nAccuracy:" + liNew.horizontalAccuracy.ToString() + "\nDiff:" + 
-				(NowInEpoch() - liNew.timestamp).ToString();
+			/*tmLatLon.text = "ORANGE" + "\nAccuracy:" + liNew.horizontalAccuracy.ToString() + "\nDiff:" + 
+				(NowInEpoch() - liNew.timestamp).ToString();*/
 		} else {
-			tmLatLon.text = "RED";
+			//tmLatLon.text = "RED";
 		}
-		tmLatLon.Commit ();
+		//tmLatLon.Commit ();
 		
-		sStatus = Input.location.status.ToString () + " : " + NowInEpoch ();
+		sStatus = Input.location.status.ToString ();
 		tmStatus.text = sStatus;
 		tmStatus.Commit ();
 	}
