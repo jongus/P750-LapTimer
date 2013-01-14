@@ -8,10 +8,12 @@ public class scriptMain : MonoBehaviour {
 	private LocationInfo liOld;
 	private LocationInfo liNew;
 	
-	private Color cRed = new Color(255.0f, 124.0f, 108.0f, 255.0f);
-	private Color cBlue = new Color(62.0f, 190.0f, 255.0f, 255.0f);
-	private Color cGrey = new Color(162.0f, 178.0f, 191.0f, 255.0f);
-	private Color cWhite = new Color(255.0f, 255.0f, 255.0f, 255.0f);
+	private double dLastTimestamp = 0;
+	
+	private Color cRed = new Color(1.000000000f,0.266666667f,0.180392157f, 1.0f);
+	private Color cBlue = new Color(0.243137255f,0.745098039f,1.000000000f, 1.0f);
+	private Color cGrey = new Color(0.635294118f,0.698039216f,0.749019608f, 1.0f);
+	private Color cWhite = new Color(1.0f, 1.0f, 1.0f, 1.0f);
 	
 	private tk2dTextMesh tmStatus; //DEBUG
 	private tk2dTextMesh tmMaxSpeed;
@@ -23,6 +25,7 @@ public class scriptMain : MonoBehaviour {
 	private tk2dTextMesh tmBigInfo;
 	private tk2dTextMesh tmBigInfoCaption;
 	
+	private bool bUIEnabled = true; 
 	
 	 
 	// Start is called just before any of the
@@ -39,74 +42,97 @@ public class scriptMain : MonoBehaviour {
 		tmBigInfo = GameObject.Find ("tmBigInfo").GetComponent<tk2dTextMesh>();
 		tmBigInfoCaption = GameObject.Find ("tmBigInfoCaption").GetComponent<tk2dTextMesh>();
 		
-		
+		//Start the location service
 		Input.location.Start(1.0f, 1.0f);
-		
-		DisableUI ();
+		ResetGUI();
+		EnableUI (false);
 	}
 	
-	void DisableUI() {
-		tk2dTextMesh[] tms = (tk2dTextMesh)GameObject.FindGameObjectsWithTag("EnableDisableText");
+	void ResetGUI(){
+		tmMaxSpeed.text = "- kn";
+		tmAvgSpeed.text = "- kn";
+		tmCurSpeed.text = "- kn";
+		tmLapNumber.text = "0";
+		tmLapTime.text = "0:00.0";
+		tmGPS.text = "-- m";
+		tmBigInfoCaption.text = "STOP";
+		tmBigInfo.text = ".";
 		
-		foreach (GameObject tm in tms) {
-			
-			
-				
-				tm.color = cRed;
-				tm.Commit();
-			
+		tmMaxSpeed.Commit ();
+		tmAvgSpeed.Commit ();
+		tmCurSpeed.Commit ();
+		tmLapNumber.Commit ();
+		tmLapTime.Commit ();
+		tmGPS.Commit ();
+		tmBigInfoCaption.Commit ();
+		tmBigInfo.Commit ();
+		
+		Screen.sleepTimeout = SleepTimeout.NeverSleep;
+	}
+	
+	void EnableUI(bool bEnable) {
+		if(bEnable != bUIEnabled ) {
+			GameObject[] goEnableDisableTexts = GameObject.FindGameObjectsWithTag("EnableDisableText");
+			//Enable/disable text color
+			foreach (GameObject goEnableDisableText in goEnableDisableTexts) {
+				tk2dTextMesh tmEnableDisableText = goEnableDisableText.GetComponent<tk2dTextMesh>();
+				if(tmEnableDisableText != null) {
+					//We have a textmesh with tag "EnableDisableText"
+					if(bEnable == true) {
+						tmEnableDisableText.color = cBlue;
+					} else {
+						tmEnableDisableText.color = cRed;
+					}
+					tmEnableDisableText.Commit ();
+				}
+			}
+			//Enable/disable the start/stop button
 		}
+		//Updsate variable
+		bUIEnabled = bEnable;
 	}
 	
 	// Update is called every frame, if the
 	// MonoBehaviour is enabled.
 	void Update () {
-		//Check for gps operation
 		
-		//tmLatLon.text = Input.location.lastData.latitude.ToString ();
-		if(GpsStatusOkey() == 2){
-			/*tmLatLon.text = liNew.latitude.ToString () + "\n" + 
-				liNew.longitude.ToString () + "\n" +
-					liNew.horizontalAccuracy.ToString() + "\n" +
-					liNew.timestamp.ToString()  + "\n" +
-					NowInEpoch (); */
-		} else if(GpsStatusOkey() == 1) {
-			/*tmLatLon.text = "ORANGE" + "\nAccuracy:" + liNew.horizontalAccuracy.ToString() + "\nDiff:" + 
-				(NowInEpoch() - liNew.timestamp).ToString();*/
-		} else {
-			//tmLatLon.text = "RED";
-		}
-		//tmLatLon.Commit ();
-		
-		sStatus = Input.location.status.ToString ();
-		tmStatus.text = sStatus;
-		tmStatus.Commit ();
-	}
-	
-	int GpsStatusOkey() {
-		//0 = false 1 = orange, some kind but not good, 2 = working good!'
 		if(Input.location.status == LocationServiceStatus.Running ) {
-			liNew = Input.location.lastData;
-			//Check last update time
-			if((NowInEpoch() - liNew.timestamp) > 5.0d ) {
-				//okey, more than 5 sec = Orange
-				return 1;
+			//Okey, gps is running
+			LocationInfo liTmp = Input.location.lastData;
+			if(liTmp.timestamp != dLastTimestamp ) {
+				//Okey, we got a new position from the gps
+				if(liTmp.horizontalAccuracy < 50.0f) {
+					//We do have a okey accuracy
+					EnableUI (true);
+					//Do the work HERE!
+					tmGPS.text = liTmp.horizontalAccuracy + " m";
+					tmGPS.Commit ();
+					
+				} else {
+					//Too bad accuracy
+					tmGPS.text = "-- m";
+					EnableUI (false);
+				}
+			} else if((dNowInEpoch() - dLastTimestamp ) > 5.0d ) {
+				//No gps position update in 5 sec!
+				tmGPS.text = "-- m";
+				EnableUI (false);
+			} else {
+				//NOP
 			}
-			
-			//Check accuracy
-			if(liNew.horizontalAccuracy > 30.0f){
-				//Too bad = Orange
-				return 1;
-			}
-			//Okey, every thing is okey, I think
-			return 2;
-			
 		} else {
-			return 0;
+			//Gps not running
+			tmGPS.text = "-- m";
+			EnableUI (false);
 		}
+		
+		// Do other updates
+		
+		
 	}
 	
-	double NowInEpoch() {
+	
+	double dNowInEpoch() {
 		TimeSpan span = DateTime.UtcNow.Subtract (new DateTime(1970,1,1,0,0,0));
 		return (double)span.TotalSeconds;
 	}
