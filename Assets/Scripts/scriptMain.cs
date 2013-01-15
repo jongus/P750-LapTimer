@@ -25,6 +25,9 @@ public class scriptMain : MonoBehaviour {
 	private tk2dTextMesh tmBigInfo;
 	private tk2dTextMesh tmBigInfoCaption;
 	
+	private tk2dButton btnStartStop;
+	
+	
 	private bool bUIEnabled = true; 
 	
 	 
@@ -41,6 +44,9 @@ public class scriptMain : MonoBehaviour {
 		tmGPS = GameObject.Find ("tmGPS").GetComponent<tk2dTextMesh>();
 		tmBigInfo = GameObject.Find ("tmBigInfo").GetComponent<tk2dTextMesh>();
 		tmBigInfoCaption = GameObject.Find ("tmBigInfoCaption").GetComponent<tk2dTextMesh>();
+		// And the start/stop button
+		tk2dSprite spriteTmp = GameObject.Find ("spriteStartStop").GetComponent<tk2dSprite>();
+		btnStartStop = spriteTmp.GetComponent<tk2dButton>();
 		
 		//Start the location service
 		Input.location.Start(1.0f, 1.0f);
@@ -137,4 +143,13 @@ public class scriptMain : MonoBehaviour {
 		return (double)span.TotalSeconds;
 	}
 	
+	void StartStopClicked(){
+		
+	}
+	
+	void SettingsClicked(){
+		
+	}
+	
 }
+
