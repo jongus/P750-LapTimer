@@ -26,6 +26,7 @@ public class scriptMain : MonoBehaviour {
 	private tk2dTextMesh tmBigInfoCaption;
 	
 	private tk2dButton btnStartStop;
+	tk2dSprite spriteStartStop;
 	
 	
 	private bool bUIEnabled = true; 
@@ -45,8 +46,8 @@ public class scriptMain : MonoBehaviour {
 		tmBigInfo = GameObject.Find ("tmBigInfo").GetComponent<tk2dTextMesh>();
 		tmBigInfoCaption = GameObject.Find ("tmBigInfoCaption").GetComponent<tk2dTextMesh>();
 		// And the start/stop button
-		tk2dSprite spriteTmp = GameObject.Find ("spriteStartStop").GetComponent<tk2dSprite>();
-		btnStartStop = spriteTmp.GetComponent<tk2dButton>();
+		spriteStartStop = GameObject.Find ("spriteStartStop").GetComponent<tk2dSprite>();
+		btnStartStop = spriteStartStop.GetComponent<tk2dButton>();
 		
 		//Start the location service
 		Input.location.Start(1.0f, 1.0f);
@@ -93,6 +94,14 @@ public class scriptMain : MonoBehaviour {
 				}
 			}
 			//Enable/disable the start/stop button
+			if(bEnable) {
+				spriteStartStop.spriteId = 2;
+				btnStartStop.enabled = true;
+			} else {
+				spriteStartStop.spriteId = 5;
+				btnStartStop.enabled = false;
+			}
+			//btnStartStop.UpdateSpriteIds ();
 		}
 		//Updsate variable
 		bUIEnabled = bEnable;
@@ -110,17 +119,33 @@ public class scriptMain : MonoBehaviour {
 				if(liTmp.horizontalAccuracy < 50.0f) {
 					//We do have a okey accuracy
 					EnableUI (true);
+					tmBigInfoCaption.text = ""; //BUG
 					//Do the work HERE!
-					tmGPS.text = liTmp.horizontalAccuracy + " m";
-					tmGPS.Commit ();
 					
+					
+					
+					tmGPS.text = liTmp.horizontalAccuracy + " m";
+					//Commit all text
+					tmBigInfoCaption.Commit ();
+					GameObject[] goEnableDisableTexts = GameObject.FindGameObjectsWithTag("EnableDisableText");
+					foreach (GameObject goEnableDisableText in goEnableDisableTexts) {
+						tk2dTextMesh tmEnableDisableText = goEnableDisableText.GetComponent<tk2dTextMesh>();
+						if(tmEnableDisableText != null) {
+							//We have a textmesh with tag "EnableDisableText"
+							tmEnableDisableText.Commit ();
+						}
+					}
 				} else {
 					//Too bad accuracy
+					tmBigInfoCaption.text = "GPS accuracy too bad!";
+					tmBigInfoCaption.Commit ();
 					tmGPS.text = "-- m";
 					EnableUI (false);
 				}
 			} else if((dNowInEpoch() - dLastTimestamp ) > 5.0d ) {
 				//No gps position update in 5 sec!
+				tmBigInfoCaption.text = "GPS update frequency too bad!";
+				tmBigInfoCaption.Commit ();
 				tmGPS.text = "-- m";
 				EnableUI (false);
 			} else {
@@ -128,6 +153,15 @@ public class scriptMain : MonoBehaviour {
 			}
 		} else {
 			//Gps not running
+			if(Input.location.status == LocationServiceStatus.Failed ) {
+				tmBigInfoCaption.text = "Faild to start GPS!";
+			} else if(Input.location.status == LocationServiceStatus.Initializing  ) {
+				tmBigInfoCaption.text = "GPS initilizing";
+			} else if(Input.location.status == LocationServiceStatus.Stopped   ) {
+				tmBigInfoCaption.text = "GPS Stoped";
+			} 
+			tmBigInfoCaption.Commit ();
+			
 			tmGPS.text = "-- m";
 			EnableUI (false);
 		}
