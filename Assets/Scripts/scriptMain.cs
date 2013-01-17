@@ -26,10 +26,15 @@ public class scriptMain : MonoBehaviour {
 	private tk2dTextMesh tmBigInfoCaption;
 	
 	private tk2dButton btnStartStop;
-	tk2dSprite spriteStartStop;
+	private tk2dSprite spriteStartStop;
+	private tk2dButton btnSettings;
+	private tk2dSprite spriteSettings;
+	
 	
 	
 	private bool bUIEnabled = true; 
+	
+	private bool bRunning = false;
 	
 	 
 	// Start is called just before any of the
@@ -45,9 +50,11 @@ public class scriptMain : MonoBehaviour {
 		tmGPS = GameObject.Find ("tmGPS").GetComponent<tk2dTextMesh>();
 		tmBigInfo = GameObject.Find ("tmBigInfo").GetComponent<tk2dTextMesh>();
 		tmBigInfoCaption = GameObject.Find ("tmBigInfoCaption").GetComponent<tk2dTextMesh>();
-		// And the start/stop button
+		// And the start/stop and settings button
 		spriteStartStop = GameObject.Find ("spriteStartStop").GetComponent<tk2dSprite>();
 		btnStartStop = spriteStartStop.GetComponent<tk2dButton>();
+		spriteSettings = GameObject.Find ("spriteSettings").GetComponent<tk2dSprite>();
+		btnSettings = spriteSettings.GetComponent<tk2dButton>();
 		
 		//Start the location service
 		Input.location.Start(1.0f, 1.0f);
@@ -94,14 +101,17 @@ public class scriptMain : MonoBehaviour {
 				}
 			}
 			//Enable/disable the start/stop button
-			if(bEnable) {
-				spriteStartStop.spriteId = 2;
-				btnStartStop.enabled = true;
-			} else {
-				spriteStartStop.spriteId = 5;
-				btnStartStop.enabled = false;
+			tk2dBaseSprite baseSprite = spriteStartStop.GetComponent<tk2dBaseSprite>();
+			if(baseSprite) {
+				if(bEnable) {
+					spriteStartStop.spriteId = baseSprite.GetSpriteIdByName("Start_Normal");
+					btnStartStop.enabled = true;
+				} else {
+					spriteStartStop.spriteId = baseSprite.GetSpriteIdByName("Start_Disabel");
+					btnStartStop.enabled = false;
+					bRunning = false;
+				}	
 			}
-			//btnStartStop.UpdateSpriteIds ();
 		}
 		//Updsate variable
 		bUIEnabled = bEnable;
@@ -121,7 +131,8 @@ public class scriptMain : MonoBehaviour {
 					EnableUI (true);
 					tmBigInfoCaption.text = ""; //BUG
 					//Do the work HERE!
-					
+					tmStatus.text = CalculateDistanceBetweenGPSCoordinates(11.954400d, 57.699290d, 11.953546d, 57.699592d) + " m";
+					tmStatus.Commit ();
 					
 					
 					tmGPS.text = liTmp.horizontalAccuracy + " m";
@@ -179,10 +190,54 @@ public class scriptMain : MonoBehaviour {
 	
 	void StartStopClicked(){
 		
+		if(bRunning == false) {
+			//Okey, we have stoped, show play 
+			btnStartStop.buttonDownSprite = "Start_Highlight";
+			btnStartStop.buttonUpSprite = "Start_Normal";
+			btnStartStop.buttonPressedSprite = "Start_Normal";
+			//And enable settings
+			tk2dBaseSprite baseSprite = spriteSettings.GetComponent<tk2dBaseSprite>();
+			if(baseSprite){
+				spriteSettings.spriteId = baseSprite.GetSpriteIdByName("Settings_Normal");
+			}
+			btnSettings.enabled = true;
+			bRunning = true;
+		} else {
+			btnStartStop.buttonDownSprite = "Stop_Highlight";
+			btnStartStop.buttonUpSprite = "Stop_Normal";
+			btnStartStop.buttonPressedSprite = "Stop_Normal";
+			//And disable settings
+			tk2dBaseSprite baseSprite = spriteSettings.GetComponent<tk2dBaseSprite>();
+			if(baseSprite){
+				spriteSettings.spriteId = baseSprite.GetSpriteIdByName("Settings_Disabel");
+			}
+			btnSettings.enabled = false;
+			bRunning = false;
+		}
+		btnStartStop.UpdateSpriteIds ();
 	}
 	
 	void SettingsClicked(){
 		
+	}
+	
+	public static double CalculateDistanceBetweenGPSCoordinates(double lon1, double lat1, double lon2, double lat2) {
+	    const double R = 6378137; 
+	    const double degreesToRadians = Math.PI / 180; 
+	
+	    //convert from fractional degrees (GPS) to radians 
+	    lon1 *= degreesToRadians; 
+	    lat1 *= degreesToRadians; 
+	    lon2 *= degreesToRadians; 
+	    lat2 *= degreesToRadians; 
+	
+	    double dlon = lon2 - lon1; 
+	    double dlat = lat2 - lat1; 
+	    double a = Math.Pow(Math.Sin(dlat / 2), 2) + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(dlon / 2), 2);
+	    double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a)); 
+	    double d = R * c; 
+	
+	    return d; 
 	}
 	
 }
