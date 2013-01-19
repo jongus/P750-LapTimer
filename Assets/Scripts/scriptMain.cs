@@ -36,6 +36,10 @@ public class scriptMain : MonoBehaviour {
 	
 	private bool bRunning = false;
 	
+	private const double  dMS2KN = 1.97260274d;
+	private double dLastLat = 0;
+	private double dLastLon = 0;
+	
 	 
 	// Start is called just before any of the
 	// Update methods is called the first time.
@@ -131,9 +135,23 @@ public class scriptMain : MonoBehaviour {
 					EnableUI (true);
 					tmBigInfoCaption.text = ""; //BUG
 					//Do the work HERE!
-					tmStatus.text = CalculateDistanceBetweenGPSCoordinates(11.954400d, 57.699290d, 11.953546d, 57.699592d) + " m";
-					tmStatus.Commit ();
+					//Are we running?
+					if(bRunning == true) {
+						double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
+							/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
+						tmCurSpeed.text = Math.Round (dSpeed,1).ToString () + " kn";
+					}
 					
+					//tmStatus.text = CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude ) + " m";
+					//tmStatus.text = dLastLon.ToString () + " " + dLastLat.ToString ();
+					//tmStatus.Commit ();
+					
+					
+					
+					//Save current pos as last pos
+					dLastLat = (double)liTmp.latitude;
+					dLastLon = (double)liTmp.longitude;
+					dLastTimestamp = liTmp.timestamp;
 					
 					tmGPS.text = liTmp.horizontalAccuracy + " m";
 					//Commit all text
@@ -190,7 +208,7 @@ public class scriptMain : MonoBehaviour {
 	
 	void StartStopClicked(){
 		
-		if(bRunning == false) {
+		if(bRunning == true) {
 			//Okey, we have stoped, show play 
 			btnStartStop.buttonDownSprite = "Start_Highlight";
 			btnStartStop.buttonUpSprite = "Start_Normal";
@@ -201,7 +219,7 @@ public class scriptMain : MonoBehaviour {
 				spriteSettings.spriteId = baseSprite.GetSpriteIdByName("Settings_Normal");
 			}
 			btnSettings.enabled = true;
-			bRunning = true;
+			bRunning = false;
 		} else {
 			btnStartStop.buttonDownSprite = "Stop_Highlight";
 			btnStartStop.buttonUpSprite = "Stop_Normal";
@@ -212,7 +230,7 @@ public class scriptMain : MonoBehaviour {
 				spriteSettings.spriteId = baseSprite.GetSpriteIdByName("Settings_Disabel");
 			}
 			btnSettings.enabled = false;
-			bRunning = false;
+			bRunning = true;
 		}
 		btnStartStop.UpdateSpriteIds ();
 	}
