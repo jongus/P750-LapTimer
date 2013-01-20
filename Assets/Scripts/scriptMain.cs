@@ -30,7 +30,18 @@ public class scriptMain : MonoBehaviour {
 	private tk2dButton btnSettings;
 	private tk2dSprite spriteSettings;
 	
+	public enum GpsStates
+    {
+        Begin,
+        RunningAccuracyOk,
+		RunningAccuracyBad,
+		Initializing,
+		Faild,
+		Stoped
+    }
 	
+	private GpsStates gpsState = GpsStates.Begin;
+	private GpsStates oldGpsState = GpsStates.Begin;
 	
 	private bool bUIEnabled = true; 
 	
@@ -39,6 +50,8 @@ public class scriptMain : MonoBehaviour {
 	private const double  dMS2KN = 1.97260274d;
 	private double dLastLat = 0;
 	private double dLastLon = 0;
+	
+	
 	
 	 
 	// Start is called just before any of the
@@ -113,7 +126,6 @@ public class scriptMain : MonoBehaviour {
 				} else {
 					spriteStartStop.spriteId = baseSprite.GetSpriteIdByName("Start_Disabel");
 					btnStartStop.enabled = false;
-					bRunning = false;
 				}	
 			}
 		}
@@ -121,83 +133,108 @@ public class scriptMain : MonoBehaviour {
 		bUIEnabled = bEnable;
 	}
 	
+	void UpdatePos() {
+		LocationInfo liTmp = Input.location.lastData;
+		if(bRunning == true) {
+			double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
+				/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
+			tmCurSpeed.text = Math.Round (dSpeed,1).ToString ("#0.0") + " kn";
+		}
+		
+		//Save current pos as last pos
+		dLastLat = (double)liTmp.latitude;
+		dLastLon = (double)liTmp.longitude;
+		dLastTimestamp = liTmp.timestamp;
+		
+		tmGPS.text = liTmp.horizontalAccuracy + " m";
+		//Commit all text
+		tmBigInfoCaption.Commit ();
+		GameObject[] goEnableDisableTexts = GameObject.FindGameObjectsWithTag("EnableDisableText");
+		foreach (GameObject goEnableDisableText in goEnableDisableTexts) {
+			tk2dTextMesh tmEnableDisableText = goEnableDisableText.GetComponent<tk2dTextMesh>();
+			if(tmEnableDisableText != null) {
+				//We have a textmesh with tag "EnableDisableText"
+				tmEnableDisableText.Commit ();
+			}
+		}	
+	}
+	
 	// Update is called every frame, if the
 	// MonoBehaviour is enabled.
 	void Update () {
-		
+		//Make new state
+		LocationInfo liTmp;
 		if(Input.location.status == LocationServiceStatus.Running ) {
 			//Okey, gps is running
-			LocationInfo liTmp = Input.location.lastData;
-			if(liTmp.timestamp != dLastTimestamp ) {
-				//Okey, we got a new position from the gps
-				if(liTmp.horizontalAccuracy < 50.0f) {
-					//We do have a okey accuracy
-					EnableUI (true);
-					tmBigInfoCaption.text = ""; //BUG
-					//Do the work HERE!
-					//Are we running?
-					if(bRunning == true) {
-						double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
-							/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
-						tmCurSpeed.text = Math.Round (dSpeed,1).ToString () + " kn";
-					}
-					
-					//tmStatus.text = CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude ) + " m";
-					//tmStatus.text = dLastLon.ToString () + " " + dLastLat.ToString ();
-					//tmStatus.Commit ();
-					
-					
-					
-					//Save current pos as last pos
-					dLastLat = (double)liTmp.latitude;
-					dLastLon = (double)liTmp.longitude;
-					dLastTimestamp = liTmp.timestamp;
-					
-					tmGPS.text = liTmp.horizontalAccuracy + " m";
-					//Commit all text
-					tmBigInfoCaption.Commit ();
-					GameObject[] goEnableDisableTexts = GameObject.FindGameObjectsWithTag("EnableDisableText");
-					foreach (GameObject goEnableDisableText in goEnableDisableTexts) {
-						tk2dTextMesh tmEnableDisableText = goEnableDisableText.GetComponent<tk2dTextMesh>();
-						if(tmEnableDisableText != null) {
-							//We have a textmesh with tag "EnableDisableText"
-							tmEnableDisableText.Commit ();
-						}
-					}
-				} else {
-					//Too bad accuracy
-					tmBigInfoCaption.text = "GPS accuracy too bad!";
-					tmBigInfoCaption.Commit ();
-					tmGPS.text = "-- m";
-					EnableUI (false);
-				}
-			} else if((dNowInEpoch() - dLastTimestamp ) > 5.0d ) {
-				//No gps position update in 5 sec!
-				tmBigInfoCaption.text = "GPS update frequency too bad!";
-				tmBigInfoCaption.Commit ();
-				tmGPS.text = "-- m";
-				EnableUI (false);
+			liTmp = Input.location.lastData;		
+			//Okey, we got a new position from the gps
+			if(liTmp.horizontalAccuracy < 50.0f) {
+				//We do have a okey accuracy
+				gpsState = GpsStates.RunningAccuracyOk;
 			} else {
-				//NOP
+				//Too bad accuracy
+				gpsState = GpsStates.RunningAccuracyBad;
 			}
-		} else {
-			//Gps not running
-			if(Input.location.status == LocationServiceStatus.Failed ) {
-				tmBigInfoCaption.text = "Faild to start GPS!";
-			} else if(Input.location.status == LocationServiceStatus.Initializing  ) {
-				tmBigInfoCaption.text = "GPS initilizing";
-			} else if(Input.location.status == LocationServiceStatus.Stopped   ) {
-				tmBigInfoCaption.text = "GPS Stoped";
-			} 
-			tmBigInfoCaption.Commit ();
+	
+		} else if(Input.location.status == LocationServiceStatus.Failed ) {
+			gpsState = GpsStates.Faild;
+		} else if(Input.location.status == LocationServiceStatus.Initializing  ) {
+			gpsState = GpsStates.Initializing;
+		} else if(Input.location.status == LocationServiceStatus.Stopped   ) {
+			gpsState = GpsStates.Stoped;
+		} 
+		
+		//GPS FSM
+		switch (gpsState) {
+		case GpsStates.Begin:
+			if(gpsState != oldGpsState ) {
+				//Enter state
+			}
+		    break;
+		case GpsStates.Faild:
+			if(gpsState != oldGpsState ) {
+				//Enter state
+				tmStatus.text = "Faild to start GPS!";
+				tmStatus.Commit ();
+			}
 			
-			tmGPS.text = "-- m";
-			EnableUI (false);
+		    break;
+		case GpsStates.Initializing:
+			if(gpsState != oldGpsState ) {
+				//Enter state
+				tmStatus.text = "GPS initilizing";
+				tmStatus.Commit ();
+			}
+			
+		    break;
+		case GpsStates.RunningAccuracyBad:
+			if(gpsState != oldGpsState ) {
+				//Enter state
+				tmStatus.text = "GPS accuracy too bad";
+				tmStatus.Commit ();
+			}
+			
+		    break;
+		case GpsStates.RunningAccuracyOk:
+			if(gpsState != oldGpsState ) {
+				//Enter state
+				tmStatus.text = "";
+				tmStatus.Commit ();
+			}
+			if(Input.location.lastData.timestamp != dLastTimestamp ) {
+				UpdatePos();
+			}
+		    break;
+		case GpsStates.Stoped:
+			if(gpsState != oldGpsState ) {
+				//Enter state
+				tmStatus.text = "GPS Stoped";
+				tmStatus.Commit ();
+			}
+		    break;
 		}
-		
-		// Do other updates
-		
-		
+		//Save old state
+		oldGpsState = gpsState;	
 	}
 	
 	
@@ -213,23 +250,11 @@ public class scriptMain : MonoBehaviour {
 			btnStartStop.buttonDownSprite = "Start_Highlight";
 			btnStartStop.buttonUpSprite = "Start_Normal";
 			btnStartStop.buttonPressedSprite = "Start_Normal";
-			//And enable settings
-			tk2dBaseSprite baseSprite = spriteSettings.GetComponent<tk2dBaseSprite>();
-			if(baseSprite){
-				spriteSettings.spriteId = baseSprite.GetSpriteIdByName("Settings_Normal");
-			}
-			btnSettings.enabled = true;
 			bRunning = false;
 		} else {
 			btnStartStop.buttonDownSprite = "Stop_Highlight";
 			btnStartStop.buttonUpSprite = "Stop_Normal";
 			btnStartStop.buttonPressedSprite = "Stop_Normal";
-			//And disable settings
-			tk2dBaseSprite baseSprite = spriteSettings.GetComponent<tk2dBaseSprite>();
-			if(baseSprite){
-				spriteSettings.spriteId = baseSprite.GetSpriteIdByName("Settings_Disabel");
-			}
-			btnSettings.enabled = false;
 			bRunning = true;
 		}
 		btnStartStop.UpdateSpriteIds ();
@@ -240,6 +265,7 @@ public class scriptMain : MonoBehaviour {
 	}
 	
 	public static double CalculateDistanceBetweenGPSCoordinates(double lon1, double lat1, double lon2, double lat2) {
+		//Returns i meters
 	    const double R = 6378137; 
 	    const double degreesToRadians = Math.PI / 180; 
 	
