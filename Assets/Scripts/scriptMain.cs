@@ -42,9 +42,7 @@ public class scriptMain : MonoBehaviour {
 	
 	private GpsStates gpsState = GpsStates.Begin;
 	private GpsStates oldGpsState = GpsStates.Begin;
-	
-	private bool bUIEnabled = true; 
-	
+
 	private bool bRunning = false;
 	
 	private const double  dMS2KN = 1.97260274d;
@@ -76,7 +74,6 @@ public class scriptMain : MonoBehaviour {
 		//Start the location service
 		Input.location.Start(1.0f, 1.0f);
 		ResetGUI();
-		EnableUI (false);
 	}
 	
 	void ResetGUI(){
@@ -101,36 +98,39 @@ public class scriptMain : MonoBehaviour {
 		Screen.sleepTimeout = SleepTimeout.NeverSleep;
 	}
 	
-	void EnableUI(bool bEnable) {
-		if(bEnable != bUIEnabled ) {
-			GameObject[] goEnableDisableTexts = GameObject.FindGameObjectsWithTag("EnableDisableText");
-			//Enable/disable text color
-			foreach (GameObject goEnableDisableText in goEnableDisableTexts) {
-				tk2dTextMesh tmEnableDisableText = goEnableDisableText.GetComponent<tk2dTextMesh>();
-				if(tmEnableDisableText != null) {
-					//We have a textmesh with tag "EnableDisableText"
-					if(bEnable == true) {
-						tmEnableDisableText.color = cBlue;
-					} else {
-						tmEnableDisableText.color = cRed;
-					}
-					tmEnableDisableText.Commit ();
-				}
-			}
-			//Enable/disable the start/stop button
-			tk2dBaseSprite baseSprite = spriteStartStop.GetComponent<tk2dBaseSprite>();
-			if(baseSprite) {
-				if(bEnable) {
-					spriteStartStop.spriteId = baseSprite.GetSpriteIdByName("Start_Normal");
-					btnStartStop.enabled = true;
+	
+	
+	void EnableStartStop(bool bEnable) {
+		tk2dBaseSprite baseSprite = spriteStartStop.GetComponent<tk2dBaseSprite>();
+		if(baseSprite) {
+			if(bEnable) {
+				spriteStartStop.spriteId = baseSprite.GetSpriteIdByName("Start_Normal");
+				btnStartStop.enabled = true;
+			} else {
+				spriteStartStop.spriteId = baseSprite.GetSpriteIdByName("Start_Disabel");
+				btnStartStop.enabled = false;
+				//Add all tm here! BUG
+				tmGPS.text = "-- m";
+				tmGPS.Commit ();
+			}	
+		}
+	}
+	
+	void ShowWarning(bool bEnableWarning){
+		GameObject[] goEnableDisableTexts = GameObject.FindGameObjectsWithTag("EnableDisableText");
+		//Enable/disable text color
+		foreach (GameObject goEnableDisableText in goEnableDisableTexts) {
+			tk2dTextMesh tmEnableDisableText = goEnableDisableText.GetComponent<tk2dTextMesh>();
+			if(tmEnableDisableText != null) {
+				//We have a textmesh with tag "EnableDisableText"
+				if(bEnableWarning == true) {
+					tmEnableDisableText.color = cRed;
 				} else {
-					spriteStartStop.spriteId = baseSprite.GetSpriteIdByName("Start_Disabel");
-					btnStartStop.enabled = false;
-				}	
+					tmEnableDisableText.color = cBlue;
+				}
+				tmEnableDisableText.Commit ();
 			}
 		}
-		//Updsate variable
-		bUIEnabled = bEnable;
 	}
 	
 	void UpdatePos() {
@@ -196,6 +196,8 @@ public class scriptMain : MonoBehaviour {
 				//Enter state
 				tmStatus.text = "Faild to start GPS!";
 				tmStatus.Commit ();
+				ShowWarning (true);
+				EnableStartStop (false);
 			}
 			
 		    break;
@@ -204,15 +206,29 @@ public class scriptMain : MonoBehaviour {
 				//Enter state
 				tmStatus.text = "GPS initilizing";
 				tmStatus.Commit ();
+				ShowWarning (true);
+				EnableStartStop (false);
 			}
 			
 		    break;
 		case GpsStates.RunningAccuracyBad:
 			if(gpsState != oldGpsState ) {
 				//Enter state
-				tmStatus.text = "GPS accuracy too bad";
+				tmStatus.text = "Bad gps accuracy";
 				tmStatus.Commit ();
+				ShowWarning (true);
+				EnableStartStop (true);
 			}
+			if(Input.location.lastData.timestamp != dLastTimestamp ) {
+				UpdatePos();
+			}
+			float fTmpAccuracy = Input.location.lastData.horizontalAccuracy;
+			if(fTmpAccuracy > 100.0f) {
+				tmGPS.text = "--- m"; //BUG	
+			} else {
+				tmGPS.text = fTmpAccuracy.ToString ("#0") + " m";
+			}
+			tmGPS.Commit ();
 			
 		    break;
 		case GpsStates.RunningAccuracyOk:
@@ -220,9 +236,18 @@ public class scriptMain : MonoBehaviour {
 				//Enter state
 				tmStatus.text = "";
 				tmStatus.Commit ();
+				ShowWarning (false);
+				EnableStartStop (true);
 			}
 			if(Input.location.lastData.timestamp != dLastTimestamp ) {
+				tmStatus.text = "";
+				tmStatus.Commit ();
+				ShowWarning (false);
 				UpdatePos();
+			} else if((dNowInEpoch() - dLastTimestamp) > 5.0d) {
+				tmStatus.text = "Slow gps update";
+				tmStatus.Commit ();
+				ShowWarning (true);
 			}
 		    break;
 		case GpsStates.Stoped:
@@ -230,6 +255,8 @@ public class scriptMain : MonoBehaviour {
 				//Enter state
 				tmStatus.text = "GPS Stoped";
 				tmStatus.Commit ();
+				ShowWarning (true);
+				EnableStartStop (false);
 			}
 		    break;
 		}
@@ -244,9 +271,8 @@ public class scriptMain : MonoBehaviour {
 	}
 	
 	void StartStopClicked(){
-		
 		if(bRunning == true) {
-			//Okey, we have stoped, show play 
+			//Okey, we have clicked stop, show play 
 			btnStartStop.buttonDownSprite = "Start_Highlight";
 			btnStartStop.buttonUpSprite = "Start_Normal";
 			btnStartStop.buttonPressedSprite = "Start_Normal";
