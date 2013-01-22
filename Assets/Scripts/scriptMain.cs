@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System;
 
 public class scriptMain : MonoBehaviour {
-	private string sStatus = "-";
 	private LocationInfo liOld;
 	private LocationInfo liNew;
 	
@@ -33,8 +32,7 @@ public class scriptMain : MonoBehaviour {
 	public enum GpsStates
     {
         Begin,
-        RunningAccuracyOk,
-		RunningAccuracyBad,
+        Running,
 		Initializing,
 		Faild,
 		Stoped
@@ -163,19 +161,8 @@ public class scriptMain : MonoBehaviour {
 	// MonoBehaviour is enabled.
 	void Update () {
 		//Make new state
-		LocationInfo liTmp;
 		if(Input.location.status == LocationServiceStatus.Running ) {
-			//Okey, gps is running
-			liTmp = Input.location.lastData;		
-			//Okey, we got a new position from the gps
-			if(liTmp.horizontalAccuracy < 50.0f) {
-				//We do have a okey accuracy
-				gpsState = GpsStates.RunningAccuracyOk;
-			} else {
-				//Too bad accuracy
-				gpsState = GpsStates.RunningAccuracyBad;
-			}
-	
+			gpsState = GpsStates.Running;
 		} else if(Input.location.status == LocationServiceStatus.Failed ) {
 			gpsState = GpsStates.Faild;
 		} else if(Input.location.status == LocationServiceStatus.Initializing  ) {
@@ -211,27 +198,7 @@ public class scriptMain : MonoBehaviour {
 			}
 			
 		    break;
-		case GpsStates.RunningAccuracyBad:
-			if(gpsState != oldGpsState ) {
-				//Enter state
-				tmStatus.text = "Bad gps accuracy";
-				tmStatus.Commit ();
-				ShowWarning (true);
-				EnableStartStop (true);
-			}
-			if(Input.location.lastData.timestamp != dLastTimestamp ) {
-				UpdatePos();
-			}
-			float fTmpAccuracy = Input.location.lastData.horizontalAccuracy;
-			if(fTmpAccuracy > 100.0f) {
-				tmGPS.text = "--- m"; //BUG	
-			} else {
-				tmGPS.text = fTmpAccuracy.ToString ("#0") + " m";
-			}
-			tmGPS.Commit ();
-			
-		    break;
-		case GpsStates.RunningAccuracyOk:
+		case GpsStates.Running:
 			if(gpsState != oldGpsState ) {
 				//Enter state
 				tmStatus.text = "";
@@ -239,15 +206,23 @@ public class scriptMain : MonoBehaviour {
 				ShowWarning (false);
 				EnableStartStop (true);
 			}
+			//Do what we should!
 			if(Input.location.lastData.timestamp != dLastTimestamp ) {
+				//New data from gps! 
 				tmStatus.text = "";
 				tmStatus.Commit ();
 				ShowWarning (false);
 				UpdatePos();
-			} else if((dNowInEpoch() - dLastTimestamp) > 5.0d) {
+			} else if((dNowInEpoch() - Input.location.lastData.timestamp) > 5.0d) {
 				tmStatus.text = "Slow gps update";
 				tmStatus.Commit ();
 				ShowWarning (true);
+			} else if(Input.location.lastData.horizontalAccuracy > 100.0f) {
+				tmStatus.text = "Bad gps accuracy";
+				tmStatus.Commit ();
+				ShowWarning (true);
+				tmGPS.text = Input.location.lastData.horizontalAccuracy.ToString ("#0") + " m";
+				tmGPS.Commit ();
 			}
 		    break;
 		case GpsStates.Stoped:
