@@ -70,7 +70,7 @@ public class scriptMain : MonoBehaviour {
 		btnSettings = spriteSettings.GetComponent<tk2dButton>();
 		
 		//Start the location service
-		Input.location.Start(1.0f, 1.0f);
+		Input.location.Start(1.0f, 0.1f);
 		ResetGUI();
 	}
 	
@@ -213,11 +213,13 @@ public class scriptMain : MonoBehaviour {
 				tmStatus.Commit ();
 				ShowWarning (false);
 				UpdatePos();
-			} else if((dNowInEpoch() - Input.location.lastData.timestamp) > 5.0d) {
+			} else if((dNowInEpoch() - Input.location.lastData.timestamp) > 3.0d) {
+				//We are not moving?? Handle speed in a nice way, not a real error!
 				tmStatus.text = "Slow gps update";
 				tmStatus.Commit ();
-				ShowWarning (true);
+				ShowWarning (false);
 			} else if(Input.location.lastData.horizontalAccuracy > 100.0f) {
+				//Okey, we got problems, bad accuracy, will be hard to calculate real speed and so on...
 				tmStatus.text = "Bad gps accuracy";
 				tmStatus.Commit ();
 				ShowWarning (true);
