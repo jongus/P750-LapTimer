@@ -46,7 +46,8 @@ public class scriptMain : MonoBehaviour {
 	private const double  dMS2KN = 1.97260274d;
 	private double dLastLat = 0;
 	private double dLastLon = 0;
-	
+	private double[] adAvgSpeed;
+	private int iAvgSpeedIdx = 0;
 	
 	
 	 
@@ -68,6 +69,9 @@ public class scriptMain : MonoBehaviour {
 		btnStartStop = spriteStartStop.GetComponent<tk2dButton>();
 		spriteSettings = GameObject.Find ("spriteSettings").GetComponent<tk2dSprite>();
 		btnSettings = spriteSettings.GetComponent<tk2dButton>();
+		
+		//Variables
+		adAvgSpeed = new double[5];
 		
 		//Start the location service
 		Input.location.Start(1.0f, 0.1f);
@@ -157,6 +161,38 @@ public class scriptMain : MonoBehaviour {
 		}	
 	}
 	
+	
+	private string UpdateSpeed() {
+		LocationInfo liTmp = Input.location.lastData;
+		string sRetVal;
+		double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
+				/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
+		adAvgSpeed[iAvgSpeedIdx] = dSpeed;
+		iAvgSpeedIdx ++;
+		iAvgSpeedIdx = (iAvgSpeedIdx == 5?0:iAvgSpeedIdx);
+		
+		int iDivider = 0;
+		double dAvgSpeed = 0.0d;
+		for(int i = 0; i < 5; i++) {
+			dAvgSpeed += adAvgSpeed[i];
+			if(adAvgSpeed[i] > 0) iDivider ++;
+		}
+		dAvgSpeed /= iDivider;
+		dAvgSpeed += dSpeed;
+		dAvgSpeed /= 2;
+		if(dAvgSpeed > 10.0) {
+			sRetVal = Math.Round (dSpeed,0).ToString ("#0") + " kn";
+		} else {
+			sRetVal = Math.Round (dSpeed,1).ToString ("#0.0") + " kn";
+		}
+		
+		//Save current pos as last pos
+		dLastLat = (double)liTmp.latitude;
+		dLastLon = (double)liTmp.longitude;
+		dLastTimestamp = liTmp.timestamp;
+		return sRetVal;
+	}
+	
 	// Update is called every frame, if the
 	// MonoBehaviour is enabled.
 	void Update () {
@@ -209,23 +245,15 @@ public class scriptMain : MonoBehaviour {
 			//Do what we should!
 			if(Input.location.lastData.timestamp != dLastTimestamp ) {
 				//New data from gps! 
-				tmStatus.text = "";
-				tmStatus.Commit ();
-				ShowWarning (false);
-				UpdatePos();
-			} else if((dNowInEpoch() - Input.location.lastData.timestamp) > 3.0d) {
-				//We are not moving?? Handle speed in a nice way, not a real error!
-				tmStatus.text = "Slow gps update";
-				tmStatus.Commit ();
-				ShowWarning (false);
-			} else if(Input.location.lastData.horizontalAccuracy > 100.0f) {
-				//Okey, we got problems, bad accuracy, will be hard to calculate real speed and so on...
-				tmStatus.text = "Bad gps accuracy";
-				tmStatus.Commit ();
-				ShowWarning (true);
+				tmCurSpeed.text = UpdateSpeed();
+				tmCurSpeed.Commit();
 				tmGPS.text = Input.location.lastData.horizontalAccuracy.ToString ("#0") + " m";
 				tmGPS.Commit ();
-			}
+				
+			} else if((dNowInEpoch() - Input.location.lastData.timestamp) > 3.0d) {
+				//We are not moving?? Handle speed in a nice way, not a real error!
+				dLastTimestamp += 3.0d;
+			} 
 		    break;
 		case GpsStates.Stoped:
 			if(gpsState != oldGpsState ) {
