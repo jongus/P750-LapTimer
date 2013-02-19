@@ -134,58 +134,40 @@ public class scriptMain : MonoBehaviour {
 			}
 		}
 	}
-	
-	void UpdatePos() {
-		LocationInfo liTmp = Input.location.lastData;
-		if(bRunning == true) {
-			double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
-				/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
-			tmCurSpeed.text = Math.Round (dSpeed,1).ToString ("#0.0") + " kn";
-		}
 		
-		//Save current pos as last pos
-		dLastLat = (double)liTmp.latitude;
-		dLastLon = (double)liTmp.longitude;
-		dLastTimestamp = liTmp.timestamp;
-		
-		tmGPS.text = liTmp.horizontalAccuracy + " m";
-		//Commit all text
-		tmBigInfoCaption.Commit ();
-		GameObject[] goEnableDisableTexts = GameObject.FindGameObjectsWithTag("EnableDisableText");
-		foreach (GameObject goEnableDisableText in goEnableDisableTexts) {
-			tk2dTextMesh tmEnableDisableText = goEnableDisableText.GetComponent<tk2dTextMesh>();
-			if(tmEnableDisableText != null) {
-				//We have a textmesh with tag "EnableDisableText"
-				tmEnableDisableText.Commit ();
-			}
-		}	
-	}
-	
-	
 	private string UpdateSpeed() {
 		LocationInfo liTmp = Input.location.lastData;
 		string sRetVal;
+
+		//Okey, try to calculate speed
 		double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
 				/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
+		tmCurSpeed.text = dSpeed.ToString ("#0.0");
+		tmCurSpeed.Commit();
+		 
 		adAvgSpeed[iAvgSpeedIdx] = dSpeed;
 		iAvgSpeedIdx ++;
-		iAvgSpeedIdx = (iAvgSpeedIdx == 5?0:iAvgSpeedIdx);
-		
+		if(iAvgSpeedIdx == 5) iAvgSpeedIdx = 0;
+			
 		int iDivider = 0;
 		double dAvgSpeed = 0.0d;
 		for(int i = 0; i < 5; i++) {
-			dAvgSpeed += adAvgSpeed[i];
-			if(adAvgSpeed[i] > 0) iDivider ++;
+			if(adAvgSpeed[i] > 0.5d){
+				dAvgSpeed += adAvgSpeed[i];
+				iDivider ++;
+			}
 		}
+		if(iDivider == 0) iDivider = 1;
 		dAvgSpeed /= iDivider;
-		dAvgSpeed += dSpeed;
-		dAvgSpeed /= 2;
-		if(dAvgSpeed > 10.0) {
-			sRetVal = Math.Round (dSpeed,0).ToString ("#0") + " kn";
-		} else {
-			sRetVal = Math.Round (dSpeed,1).ToString ("#0.0") + " kn";
-		}
+		//dAvgSpeed += dSpeed;
+		//dAvgSpeed /= 2;
 		
+		if(dAvgSpeed > 10.0d) {
+			sRetVal = Math.Round (dAvgSpeed,0).ToString ("#0") + "";
+		} else {
+			sRetVal = Math.Round (dAvgSpeed,1).ToString ("#0.0") + "";
+		}	
+				
 		//Save current pos as last pos
 		dLastLat = (double)liTmp.latitude;
 		dLastLon = (double)liTmp.longitude;
@@ -245,8 +227,12 @@ public class scriptMain : MonoBehaviour {
 			//Do what we should!
 			if(Input.location.lastData.timestamp != dLastTimestamp ) {
 				//New data from gps! 
-				tmCurSpeed.text = UpdateSpeed();
-				tmCurSpeed.Commit();
+				tmBigInfo.text = UpdateSpeed();
+				tmBigInfo.Commit();
+				tmStatus.text = tmBigInfo.text.Length.ToString ();
+				tmStatus.Commit ();
+				//tmCurSpeed.text = UpdateSpeed();
+				//tmCurSpeed.Commit();
 				tmGPS.text = Input.location.lastData.horizontalAccuracy.ToString ("#0") + " m";
 				tmGPS.Commit ();
 				
