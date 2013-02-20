@@ -155,7 +155,7 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 	new protected void SetColors(Color[] dest)
 	{
 		Color c = _color;
-        if (Collection.premultipliedAlpha) { c.r *= c.a; c.g *= c.a; c.b *= c.a; }
+        if (collectionInst.premultipliedAlpha) { c.r *= c.a; c.g *= c.a; c.b *= c.a; }
 		for (int i = 0; i < dest.Length; ++i)
 			dest[i] = c;
 	}
@@ -165,7 +165,7 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 	
 	protected void SetGeometry(Vector3[] vertices, Vector2[] uvs)
 	{
-		var sprite = Collection.spriteDefinitions[spriteId];
+		var sprite = collectionInst.spriteDefinitions[spriteId];
 		if (sprite.positions.Length == 4)
 		{
 			float colliderExtentZ = (sprite.colliderType == tk2dSpriteDefinition.ColliderType.Box)?(sprite.colliderVertices[1].z * _scale.z):0.1f;
@@ -396,8 +396,8 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 	
 	protected override void UpdateMaterial()
 	{
-		if (renderer.sharedMaterial != Collection.spriteDefinitions[spriteId].materialInst)
-			renderer.material = Collection.spriteDefinitions[spriteId].materialInst;
+		if (renderer.sharedMaterial != collectionInst.spriteDefinitions[spriteId].materialInst)
+			renderer.material = collectionInst.spriteDefinitions[spriteId].materialInst;
 	}
 	
 	protected override int GetCurrentVertexCount()

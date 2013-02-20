@@ -41,6 +41,7 @@ public class tk2dCameraResolutionOverride
 		FitHeight, // fits the height to the current resolution
 		FitVisible, // best fit (either width or height)
 		StretchToFit, // stretch to fit, could be non-uniform and/or very ugly
+		PixelPerfectFit, // fits to the closest power of two
 	};
 	public AutoScaleMode autoScaleMode = AutoScaleMode.None;
 	
@@ -135,6 +136,14 @@ public class tk2dCamera : MonoBehaviour
 	Vector2 _targetResolution = Vector2.zero;
 	Vector2 _scaledResolution = Vector2.zero;
 	Vector2 _screenOffset = Vector2.zero;
+	
+	/// <summary>
+	/// Zooms the current display
+	/// Anchors will still be anchored, but will be scaled with the zoomScale.
+	/// It is recommended to use a second camera for HUDs if necessary to avoid this behaviour.
+	/// </summary>
+	[System.NonSerialized]
+	public float zoomScale = 1.0f;
 
 
 	[HideInInspector]
@@ -239,12 +248,22 @@ public class tk2dCamera : MonoBehaviour
 				break;
 
 			case tk2dCameraResolutionOverride.AutoScaleMode.FitVisible:
+			case tk2dCameraResolutionOverride.AutoScaleMode.PixelPerfectFit:
 				float nativeAspect = (float)nativeResolutionWidth / nativeResolutionHeight;
 				float currentAspect = pixelWidth / pixelHeight;
 				if (currentAspect < nativeAspect)
 					s = pixelWidth / nativeResolutionWidth;
 				else
 					s = pixelHeight / nativeResolutionHeight;
+				
+				if (currentResolutionOverride.autoScaleMode == tk2dCameraResolutionOverride.AutoScaleMode.PixelPerfectFit)
+				{
+					if (s > 1.0f)
+						s = Mathf.Floor(s); // round number
+					else
+						s = Mathf.Pow(2, Mathf.Floor(Mathf.Log(s, 2))); // minimise only as power of two
+				}
+				
 				scale.Set(s, s);
 				break;
 
@@ -258,6 +277,8 @@ public class tk2dCamera : MonoBehaviour
 				scale.Set(s, s);
 				break;
 			}
+			
+			scale *= zoomScale;
 			
 			// no offset when ScaleToFit
 			if (currentResolutionOverride.autoScaleMode != tk2dCameraResolutionOverride.AutoScaleMode.StretchToFit)

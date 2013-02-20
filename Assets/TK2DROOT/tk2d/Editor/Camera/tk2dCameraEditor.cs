@@ -252,6 +252,11 @@ public class tk2dCameraEditor : Editor
 		}
 		
 		EditorGUILayout.EndHorizontal();
+		
+		// {
+		// 	tk2dCamera cam = (tk2dCamera)target;
+		// 	cam.zoomScale = EditorGUILayout.FloatField("Zoom scale", cam.zoomScale);
+		// }
 	}
 
 	// Scene GUI handler - draws custom preview window, working around Unity bug
@@ -279,6 +284,8 @@ public class tk2dCameraEditor : Editor
     [MenuItem("GameObject/Create Other/tk2d/Camera", false, 14905)]
     static void DoCreateCameraObject()
 	{
+		bool setAsMain = (Camera.main == null);
+
 		GameObject go = tk2dEditorUtility.CreateGameObjectInScene("tk2dCamera");
 		go.transform.position = new Vector3(0, 0, -10.0f);
 		Camera camera = go.AddComponent<Camera>();
@@ -286,6 +293,11 @@ public class tk2dCameraEditor : Editor
 		camera.orthographicSize = 480.0f; // arbitrary large number
 		camera.farClipPlane = 1000.0f;
 		go.AddComponent<tk2dCamera>();
+
+		// Set as main camera if Camera.main is not set
+		if (setAsMain)
+			go.tag = "MainCamera";
+
 
 		Selection.activeGameObject = go;
 		Undo.RegisterCreatedObjectUndo(go, "Create tk2dCamera");

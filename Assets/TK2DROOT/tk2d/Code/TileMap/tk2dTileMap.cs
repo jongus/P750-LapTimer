@@ -200,7 +200,7 @@ public class tk2dTileMap : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBuil
 		
 		if (!editMode)
 		{
-			ColliderBuilder.Build(this);
+			ColliderBuilder.Build(this, forceBuild);
 			BuilderUtil.SpawnPrefabs(this);
 		}
 		

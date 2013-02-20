@@ -105,7 +105,7 @@ public class tk2dSpriteDefinition
 	/// <summary>
 	/// Collider type
 	/// </summary>
-	public ColliderType colliderType = ColliderType.None;
+	public ColliderType colliderType = ColliderType.Unset;
 	
 	/// <summary>
 	/// v0 and v1 are center and size respectively for box colliders when colliderType is Box.
@@ -186,7 +186,12 @@ public class tk2dSpriteCollectionData : MonoBehaviour
 	/// Asset Name, used to load the asset
 	/// </summary>
 	public string assetName = "";	
-
+	
+	/// <summary>
+	/// Is this asset loadable using tk2dSystem
+	/// </summary>
+	public bool loadable = false;
+	
 	/// <summary>
 	/// The size of the inv ortho size used to generate the sprite collection.
 	/// </summary>
@@ -240,9 +245,14 @@ public class tk2dSpriteCollectionData : MonoBehaviour
 	/// <param name='name'>Case sensitive sprite name, as defined in the sprite collection. This is usually the source filename excluding the extension</param>
 	public int GetSpriteIdByName(string name)
 	{
+		return GetSpriteIdByName(name, 0);
+	}
+	
+	public int GetSpriteIdByName(string name, int defaultValue)
+	{
 		inst.InitDictionary();
-		int returnValue = 0;
-		inst.spriteNameLookupDict.TryGetValue(name, out returnValue);
+		int returnValue = defaultValue;
+		if (!inst.spriteNameLookupDict.TryGetValue(name, out returnValue)) return defaultValue;
 		return returnValue; // default to first sprite
 	}
 	

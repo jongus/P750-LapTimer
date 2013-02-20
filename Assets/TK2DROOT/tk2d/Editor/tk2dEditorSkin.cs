@@ -18,6 +18,10 @@ public class tk2dEditorSkin
 	static GUIStyle toolbarSearch;
 	static GUIStyle toolbarSearchClear;
 	static GUIStyle toolbarSearchRightCap;
+	static GUIStyle anim_BG;
+	static GUIStyle anim_trigger;
+	static GUIStyle anim_triggerSelected;
+	static GUIStyle whiteBox;
 	
 	static string FindAsset(string name)
 	{
@@ -84,6 +88,12 @@ public class tk2dEditorSkin
 				toolbarSearch = skin.FindStyle("ToolbarSearch");
 				toolbarSearchClear = skin.FindStyle("ToolbarSearchClear");
 				toolbarSearchRightCap = skin.FindStyle("ToolbarSearchRightCap");
+
+				anim_BG = skin.FindStyle("Anim_BG");
+				anim_trigger = skin.FindStyle("Anim_Trigger");
+				anim_triggerSelected = skin.FindStyle("Anim_TriggerSelected");
+
+				whiteBox = skin.FindStyle("WhiteBox");
 			}
 		}
 	}
@@ -99,4 +109,10 @@ public class tk2dEditorSkin
 	public static GUIStyle ToolbarSearch { get { Init(); return toolbarSearch; } }
 	public static GUIStyle ToolbarSearchClear { get { Init(); return toolbarSearchClear; } }
 	public static GUIStyle ToolbarSearchRightCap { get { Init(); return toolbarSearchRightCap; } }
+
+	public static GUIStyle Anim_BG { get { Init(); return anim_BG; } }
+	public static GUIStyle Anim_Trigger { get { Init(); return anim_trigger; } }
+	public static GUIStyle Anim_TriggerSelected { get { Init(); return anim_triggerSelected; } }
+	
+	public static GUIStyle WhiteBox { get { Init(); return whiteBox; } }
 }

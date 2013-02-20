@@ -84,6 +84,7 @@
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\MonoBehaviour.functions.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Custom Editor.cs.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\PremulVertexColor.shader" />
+     <None Include="Assets\TK2DROOT\tk2d\Shaders\goodies\PackedTextMesh.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Asset Postprocessor.cs.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Empty Class.cs.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\Blend2TexVertexColor.shader" />
@@ -94,6 +95,7 @@
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Custom Editor.boo.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\LitCutoutVertexColor.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\EditorWindow.functions.txt" />
+     <None Include="Assets\TK2DROOT\tk2d\Editor\EditorUtility.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\ScriptableWizard.functions.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Editor Window.boo.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\ScriptableObject.functions.txt" />

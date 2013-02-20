@@ -270,17 +270,20 @@ class tk2dTextMeshEditor : Editor
 			
 			EditorGUILayout.EndHorizontal();
 			
-			textMesh.useGradient = EditorGUILayout.Toggle("Use Gradient", textMesh.useGradient);
-			if (textMesh.useGradient)
+			if (textMesh.font && !textMesh.font.inst.isPacked)
 			{
-				textMesh.color = EditorGUILayout.ColorField("Top Color", textMesh.color);
-				textMesh.color2 = EditorGUILayout.ColorField("Bottom Color", textMesh.color2);
+				textMesh.useGradient = EditorGUILayout.Toggle("Use Gradient", textMesh.useGradient);
+				if (textMesh.useGradient)
+				{
+					textMesh.color = EditorGUILayout.ColorField("Top Color", textMesh.color);
+					textMesh.color2 = EditorGUILayout.ColorField("Bottom Color", textMesh.color2);
+				}
+				else
+				{
+					textMesh.color = EditorGUILayout.ColorField("Color", textMesh.color);
+				}
 			}
-			else
-			{
-				textMesh.color = EditorGUILayout.ColorField("Color", textMesh.color);
-			}
-			
+
 			if (GUI.changed)
 			{
 				textMesh.Commit();

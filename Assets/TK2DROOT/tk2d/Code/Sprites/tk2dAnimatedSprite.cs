@@ -245,6 +245,23 @@ public class tk2dAnimatedSprite : tk2dSprite
 	}
 
 	/// <summary>
+	/// Is the named clip currently active & playing?
+	/// </summary>
+	public bool IsPlaying(string name)
+	{
+		return CurrentClip != null && CurrentClip.name == name && Playing;
+	}
+
+	/// <summary>
+	/// Is this clip currently active & playing?
+	/// </summary>
+	public bool IsPlaying(tk2dSpriteAnimationClip clip)
+	{
+		return CurrentClip != null && CurrentClip == clip && Playing;
+	}
+
+
+	/// <summary>
 	/// Is a clip currently playing? 
 	/// Will return true if the clip is playing, but is paused.
 	/// </summary>
@@ -268,7 +285,19 @@ public class tk2dAnimatedSprite : tk2dSprite
 	/// <param name='name'>Case sensitive clip name, as defined in <see cref="tk2dSpriteAnimationClip"/>. </param>
 	public int GetClipIdByName(string name)
 	{
-		return anim?anim.GetClipIdByName(name):-1;
+		return anim ? anim.GetClipIdByName(name) : -1;
+	}
+		/// <summary>
+	/// Resolves an animation clip by name and returns a reference to it.
+	/// This is a convenient alias to <see cref="tk2dSpriteAnimation.GetClipByName"/>
+	/// </summary>
+	/// <returns>
+	/// tk2dSpriteAnimationClip reference, null if not found
+	/// </returns>
+	/// <param name='name'>Case sensitive clip name, as defined in <see cref="tk2dSpriteAnimationClip"/>. </param>
+	public tk2dSpriteAnimationClip GetClipByName(string name)
+	{
+		return anim ? anim.GetClipByName(name) : null;
 	}
 	
 	/// <summary>
@@ -478,14 +507,51 @@ public class tk2dAnimatedSprite : tk2dSprite
 		if (!Application.isPlaying)
 			return;
 #endif
+	
+		UpdateAnimation(Time.deltaTime);
+	}
 
+#if UNITY_EDITOR
+	public float EditorClipTime
+	{
+		get 
+		{
+			switch (currentClip.wrapMode)
+			{
+				case tk2dSpriteAnimationClip.WrapMode.Once:
+					return Mathf.Min(clipTime, currentClip.frames.Length);
+				case tk2dSpriteAnimationClip.WrapMode.Loop:
+				case tk2dSpriteAnimationClip.WrapMode.RandomLoop:
+					return clipTime % currentClip.frames.Length;
+				case tk2dSpriteAnimationClip.WrapMode.LoopSection:
+				{
+					float currFrame = clipTime;
+					float currFrameLooped = currentClip.loopStart + ((currFrame - currentClip.loopStart) % (currentClip.frames.Length - currentClip.loopStart));
+					if (currFrame >= currentClip.loopStart) return currFrameLooped;
+					else return currFrame;
+				}
+				case tk2dSpriteAnimationClip.WrapMode.PingPong:
+				{
+					int t = currentClip.frames.Length * 2 - 2;
+					float f = ((clipTime - 0.5f) % t);
+					f = (f > t * 0.5f) ? (t - f) : f;
+					return f + 0.5f;
+				}
+			}
+			return clipTime % currentClip.frames.Length;
+		}
+	}
+#endif
+
+	public void UpdateAnimation(float deltaTime)
+	{
 		// Only process when clip is playing
 		var localState = state | globalState;
 		if (localState != State.Playing)
 			return;
 
 		// Current clip should not be null at this point
-		clipTime += Time.deltaTime * clipFps;
+		clipTime += deltaTime * clipFps;
 		int _previousFrame = previousFrame;
 		
 		switch (currentClip.wrapMode)

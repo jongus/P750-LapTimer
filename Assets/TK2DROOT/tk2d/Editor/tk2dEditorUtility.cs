@@ -5,8 +5,8 @@ using System.IO;
 
 public static class tk2dEditorUtility
 {
-	public static double version = 1.8;
-	public static int releaseId = 3; // < -10000 = alpha, other negative = beta release, 0 = final, positive = final patch
+	public static double version = 1.9;
+	public static int releaseId = 0; // < -10000 = alpha, other negative = beta release, 0 = final, positive = final patch
 	
 	public static string ReleaseStringIdentifier(double _version, int _releaseId)
 	{
@@ -337,6 +337,12 @@ public static class tk2dEditorUtility
 		System.GC.Collect();
 		System.GC.WaitForPendingFinalizers();
 		EditorUtility.UnloadUnusedAssets();
+	}
+
+	public static void DeleteAsset(UnityEngine.Object obj)
+	{
+		if (obj == null) return;
+		UnityEditor.AssetDatabase.DeleteAsset(UnityEditor.AssetDatabase.GetAssetPath(obj));
 	}
 
 	public static bool IsPrefab(Object obj)

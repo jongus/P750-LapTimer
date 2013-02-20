@@ -26,11 +26,6 @@ class tk2dAnimatedSpriteEditor : tk2dSpriteEditor
 		}
 	}
 	
-	void OnDestroy()
-	{
-		tk2dSpriteThumbnailCache.ReleaseSpriteThumbnailCache();
-	}
-	
 	static bool spriteUiVisible = false;
     public override void OnInspectorGUI()
     {

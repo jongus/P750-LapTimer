@@ -227,7 +227,7 @@ namespace tk2dEditor.SpriteCollectionEditor
 
 			// Loadable
 			bool allowSwitch = SpriteCollection.spriteCollection != null;
-			bool loadable = SpriteCollection.spriteCollection?tk2dSystemUtility.IsLoadableAsset(SpriteCollection.spriteCollection):false;
+			bool loadable = SpriteCollection.spriteCollection?SpriteCollection.loadable:false;
 			bool newLoadable = EditorGUILayout.Toggle("Loadable asset", loadable);
 			if (newLoadable != loadable)
 			{
@@ -245,9 +245,11 @@ namespace tk2dEditor.SpriteCollectionEditor
 					}
 					else 
 					{
-						tk2dSystemUtility.UnmakeLoadableAsset(SpriteCollection.spriteCollection);
+						if (tk2dSystemUtility.IsLoadableAsset(SpriteCollection.spriteCollection))
+							tk2dSystemUtility.UnmakeLoadableAsset(SpriteCollection.spriteCollection);
 					}
 					loadable = newLoadable;
+					SpriteCollection.loadable = loadable;
 				}
 			}
 			if (loadable)
@@ -325,7 +327,7 @@ namespace tk2dEditor.SpriteCollectionEditor
 					{
 						foreach (tk2dSpriteCollectionFont f in deletedSpriteCollection.fonts)
 							tk2dSystemUtility.UnmakeLoadableAsset(f.data);	
-						tk2dSystemUtility.UnmakeLoadableAsset(deletedSpriteCollection);
+						tk2dSystemUtility.UnmakeLoadableAsset(deletedSpriteCollection.spriteCollection);
 					}
 				}
 

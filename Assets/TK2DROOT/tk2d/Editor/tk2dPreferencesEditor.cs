@@ -27,10 +27,17 @@ public class tk2dPreferences
 	int _numGroupedAnimationFrames;
 	string _platform;
 
-	public const int default_spriteCollectionListWidth = 200;
+	public const int default_listWidth = 200;
+	public const int default_InspectorWidth = 260;
+
 	int _spriteCollectionListWidth;
-	public const int default_spriteCollectionInspectorWidth = 260;
 	int _spriteCollectionInspectorWidth;
+
+	int _animListWidth;
+	int _animInspectorWidth;
+	int _animFrameWidth;
+	int _animBackground;
+
 	public const string default_platform = "";
 
 	public bool displayTextureThumbs { get { return _displayTextureThumbs; } set { if (_displayTextureThumbs != value) { _displayTextureThumbs = value; Write(); } } }
@@ -42,6 +49,10 @@ public class tk2dPreferences
 	public int numGroupedAnimationFrames { get { return _numGroupedAnimationFrames; } set { if (_numGroupedAnimationFrames != value) { _numGroupedAnimationFrames = value; Write(); } } }
 	public int spriteCollectionInspectorWidth { get { return _spriteCollectionInspectorWidth; } set { if (_spriteCollectionInspectorWidth != value) { _spriteCollectionInspectorWidth = value; Write(); } } }
 	public int spriteCollectionListWidth { get { return _spriteCollectionListWidth; } set { if (_spriteCollectionListWidth != value) { _spriteCollectionListWidth = value; Write(); } } }
+	public int animInspectorWidth { get { return _animInspectorWidth; } set { if (_animInspectorWidth != value) { _animInspectorWidth = value; Write(); } } }
+	public int animListWidth { get { return _animListWidth; } set { if (_animListWidth != value) { _animListWidth = value; Write(); } } }
+	public int animFrameWidth { get { return _animFrameWidth; } set { if (_animFrameWidth != value) { _animFrameWidth = value; Write(); } } }
+	public int animBackground { get { return _animBackground; } set { if (_animBackground != value) { _animBackground = value; Write(); } } }
 	public string platform { 
 		get { return _platform; } 
 		set 
@@ -72,8 +83,12 @@ public class tk2dPreferences
 		_groupAnimDisplay = EditorPrefs.GetBool(prefix + "_groupAnimDisplay", false);
 
 		_numGroupedAnimationFrames = EditorPrefs.GetInt(prefix + "_numGroupedAnimationFrames", 30);
-		_spriteCollectionListWidth = EditorPrefs.GetInt(prefix + "_spriteCollectionListWidth", default_spriteCollectionListWidth);
-		_spriteCollectionInspectorWidth = EditorPrefs.GetInt(prefix + "_spriteCollectionInspectorWidth", default_spriteCollectionInspectorWidth);
+		_spriteCollectionListWidth = EditorPrefs.GetInt(prefix + "_spriteCollectionListWidth", default_listWidth);
+		_spriteCollectionInspectorWidth = EditorPrefs.GetInt(prefix + "_spriteCollectionInspectorWidth", default_InspectorWidth);
+		_animListWidth = EditorPrefs.GetInt(prefix + "_animListWidth", default_listWidth);
+		_animFrameWidth = EditorPrefs.GetInt(prefix + "_animFrameWidth", -1);
+		_animBackground = EditorPrefs.GetInt(prefix + "_animBackground", 0);
+		_animInspectorWidth = EditorPrefs.GetInt(prefix + "_animInspectorWidth", default_InspectorWidth);
 		_platform = EditorPrefs.GetString(prefix + "_platform", default_platform);
 	}
 	
@@ -93,6 +108,11 @@ public class tk2dPreferences
 		EditorPrefs.SetInt(prefix + "_numGroupedAnimationFrames", _numGroupedAnimationFrames);
 		EditorPrefs.SetInt(prefix + "_spriteCollectionListWidth", _spriteCollectionListWidth);
 		EditorPrefs.SetInt(prefix + "_spriteCollectionInspectorWidth", _spriteCollectionInspectorWidth);
+
+		EditorPrefs.SetInt(prefix + "_animListWidth", _animListWidth);
+		EditorPrefs.SetInt(prefix + "_animFrameWidth", _animFrameWidth);
+		EditorPrefs.SetInt(prefix + "_animBackground", _animBackground);
+		EditorPrefs.SetInt(prefix + "_animInspectorWidth", _animInspectorWidth);
 
 		EditorPrefs.SetString(prefix + "_platform", _platform);
 	}
@@ -134,10 +154,13 @@ public class tk2dPreferencesEditor : EditorWindow
 		
 		prefs.showIds = EditorGUILayout.Toggle(label_showIds, prefs.showIds);
 
-		if (GUILayout.Button("Reset Sprite Collection Editor Sizes"))
+		if (GUILayout.Button("Reset Editor Sizes"))
 		{
-			prefs.spriteCollectionListWidth = tk2dPreferences.default_spriteCollectionListWidth;
-			prefs.spriteCollectionInspectorWidth = tk2dPreferences.default_spriteCollectionInspectorWidth;
+			prefs.spriteCollectionListWidth = tk2dPreferences.default_listWidth;
+			prefs.spriteCollectionInspectorWidth = tk2dPreferences.default_InspectorWidth;
+			prefs.animListWidth = tk2dPreferences.default_listWidth;
+			prefs.animInspectorWidth = tk2dPreferences.default_InspectorWidth;
+			prefs.animFrameWidth = -1;
 		}
 
 		if (tk2dSystem.inst_NoCreate != null)

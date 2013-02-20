@@ -5,15 +5,22 @@ using System.Collections.Generic;
 [CustomEditor(typeof(tk2dSprite))]
 class tk2dSpriteEditor : Editor
 {
+	tk2dSpriteThumbnailCache thumbnailCache;
+
     public override void OnInspectorGUI()
     {
         tk2dBaseSprite sprite = (tk2dBaseSprite)target;
 		DrawSpriteEditorGUI(sprite);
     }
+
+    void OnEnable()
+    {
+    	thumbnailCache = new tk2dSpriteThumbnailCache();
+    }
 	
 	void OnDestroy()
 	{
-		tk2dSpriteThumbnailCache.ReleaseSpriteThumbnailCache();
+		thumbnailCache.Destroy();
 	}
 	
 
@@ -41,39 +48,42 @@ class tk2dSpriteEditor : Editor
 			if (sprite.spriteId < 0 || sprite.spriteId >= sprite.Collection.Count 
 				|| !sprite.Collection.inst.spriteDefinitions[sprite.spriteId].Valid)
 			{
-				newSpriteId = sprite.Collection.FirstValidDefinitionIndex;
+				newSpriteId = sprite.Collection.inst.FirstValidDefinitionIndex;
 			}
 			
 			newSpriteId = tk2dSpriteGuiUtility.SpriteSelectorPopup("Sprite", sprite.spriteId, sprite.Collection);
 			if (tk2dPreferences.inst.displayTextureThumbs)
 			{
-				if (sprite.Collection.version < 1 || sprite.Collection.dataGuid == tk2dSpriteGuiUtility.TransientGUID)
+				tk2dSpriteDefinition def = sprite.GetCurrentSpriteDef();
+				if (sprite.Collection.version < 1 || def.texelSize == Vector2.zero)
 				{
 					string message = "";
 					
 					message = "No thumbnail data.";
-					if (sprite.Collection.version < 1 && sprite.Collection.dataGuid != tk2dSpriteGuiUtility.TransientGUID)
+					if (sprite.Collection.version < 1)
 						message += "\nPlease rebuild Sprite Collection.";
 					
 					tk2dGuiUtility.InfoBox(message, tk2dGuiUtility.WarningLevel.Info);
 				}
 				else
 				{
-					var tex = tk2dSpriteThumbnailCache.GetThumbnailTexture(sprite.Collection, sprite.spriteId);
-					if (tex) 
+					GUILayout.BeginHorizontal();
+					EditorGUILayout.PrefixLabel(" ");
+
+					Vector2 texSize = thumbnailCache.GetSpriteSizePixels(def);
+					float w = texSize.x;
+					float h = texSize.y;
+					float maxSize = 128.0f;
+					if (w > maxSize)
 					{
-						float w = tex.width;
-						float h = tex.height;
-						float maxSize = 128.0f;
-						if (w > maxSize)
-						{
-							h = h / w * maxSize;
-							w = maxSize;
-						}
-						
-						Rect r = GUILayoutUtility.GetRect(w, h);
-						GUI.DrawTexture(r, tex, ScaleMode.ScaleToFit);
+						h = h / w * maxSize;
+						w = maxSize;
 					}
+					
+					Rect r = GUILayoutUtility.GetRect(w, h, GUILayout.ExpandWidth(false));
+					thumbnailCache.DrawSpriteTexture(r, def);
+
+					GUILayout.EndHorizontal();
 				}
 			}
 

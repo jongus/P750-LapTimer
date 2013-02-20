@@ -36,7 +36,24 @@ namespace tk2dRuntime
 			sc.halfTargetHeight = size.targetHeight * 0.5f;
 			sc.premultipliedAlpha = false;
 			
-			sc.material = new Material(Shader.Find("tk2d/BlendVertexColor"));
+			string shaderName = "tk2d/BlendVertexColor";
+
+#if UNITY_EDITOR
+			{
+				Shader ts = Shader.Find(shaderName);
+				string assetPath = UnityEditor.AssetDatabase.GetAssetPath(ts);
+				if (assetPath.ToLower().IndexOf("/resources/") == -1)
+				{
+					Debug.LogError("tk2dRuntimeSpriteCollection.CreateFromTexture - the tk2d/BlendVertexColor shader needs to be in a resources folder for this to work.\n" +
+						"Please create a subdirectory named 'resources' where the shaders are, and move the BlendVertexColor shader into this directory.\n\n"+
+						"eg. TK2DROOT/tk2d/Shaders/Resources/BlendVertexColor"+
+						"\n\n\n\n\n");
+					return null;
+				}
+			}
+#endif
+
+			sc.material = new Material(Shader.Find(shaderName));
 			sc.material.mainTexture = texture;
 			sc.materials = new Material[1] { sc.material };
 			sc.textures = new Texture[1] { texture };
@@ -69,6 +86,7 @@ namespace tk2dRuntime
 			def.flipped = false;
 			def.extractRegion = false;
 			def.name = texture.name;
+			def.colliderType = tk2dSpriteDefinition.ColliderType.Unset;
 			
 			float fwidth = texture.width;
 			float fheight = texture.height;
@@ -111,6 +129,8 @@ namespace tk2dRuntime
 				(boundsMax + boundsMin) / 2.0f,
 				(boundsMax - boundsMin)
 			};
+
+			def.texelSize = new Vector2(scale, scale);			
 							
 			return def;
 		}

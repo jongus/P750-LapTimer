@@ -517,7 +517,7 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	// tk2dRuntime.ISpriteCollectionEditor
 	public bool UsesSpriteCollection(tk2dSpriteCollectionData spriteCollection)
 	{
-		return Collection == spriteCollection || collectionInst == spriteCollection;
+		return Collection == spriteCollection;
 	}
 	
 	public virtual void ForceBuild()

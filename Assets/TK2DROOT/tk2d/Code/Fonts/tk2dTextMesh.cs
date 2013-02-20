@@ -228,6 +228,10 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 	/// Call <see cref="Commit"/> to commit changes.</summary>
 	public float LineSpacing { get { return lineSpacing; } set { if (lineSpacing != value) { lineSpacing = value; updateFlags |= UpdateFlags.UpdateText; } } }
 	
+	
+	// Channel select color constants
+	static readonly Color[] channelSelectColors = new Color[] { new Color(0,0,1,0), new Color(0,1,0,0), new Color(1,0,0,0), new Color(0,0,0,1) };
+	
 	void InitInstance()
 	{
 		if (_fontInst == null && _font != null)
@@ -470,6 +474,15 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 				uv2[target * 4 + 2] = gradientOffset + chr.gradientUv[2];
 				uv2[target * 4 + 3] = gradientOffset + chr.gradientUv[3];
 			}
+			
+			if (_fontInst.isPacked)
+			{
+				Color c = channelSelectColors[chr.channel];
+				colors[target * 4 + 0] = c;
+				colors[target * 4 + 1] = c;
+				colors[target * 4 + 2] = c;
+				colors[target * 4 + 3] = c;
+			}
 
             cursorX += (chr.advance + spacing) * _scale.x;
 			
@@ -512,8 +525,8 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
     {
         if (_fontInst && ((updateFlags & UpdateFlags.UpdateBuffers) != 0 || mesh == null))
         {
-        	FormatText();
 			_fontInst.InitDictionary();
+        	FormatText();
 			
             Color topColor = _color;
             Color bottomColor = _useGradient?_color2:_color;
@@ -531,8 +544,11 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 			
 			for (int i = 0; i < target; ++i)
 			{
-                colors[i * 4 + 0] = colors[i * 4 + 1] = topColor;
-                colors[i * 4 + 2] = colors[i * 4 + 3] = bottomColor;
+				if (!_fontInst.isPacked)
+				{
+     	           colors[i * 4 + 0] = colors[i * 4 + 1] = topColor;
+        	       colors[i * 4 + 2] = colors[i * 4 + 3] = bottomColor;
+				}
 
                 triangles[i * 6 + 0] = i * 4 + 0;
                 triangles[i * 6 + 1] = i * 4 + 1;
@@ -551,8 +567,15 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
                     uv2[i * 4 + 0] = uv2[i * 4 + 1] = uv2[i * 4 + 2] = uv2[i * 4 + 3] = Vector2.zero;
 				}				
 
-				colors[i * 4 + 0] = colors[i * 4 + 1] = topColor;
-                colors[i * 4 + 2] = colors[i * 4 + 3] = bottomColor;
+				if (!_fontInst.isPacked)
+				{
+					colors[i * 4 + 0] = colors[i * 4 + 1] = topColor;
+	                colors[i * 4 + 2] = colors[i * 4 + 3] = bottomColor;
+				}
+				else
+				{
+					colors[i * 4 + 0] = colors[i * 4 + 1] = colors[i * 4 + 2] = colors[i * 4 + 3] = Color.clear;
+				}
 
                 triangles[i * 6 + 0] = i * 4 + 0;
                 triangles[i * 6 + 1] = i * 4 + 1;
@@ -627,11 +650,10 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 					mesh.uv1 = uv2;
 				}
 				
-				// comment this in for game if it becomes a problem
 				mesh.RecalculateBounds();
 	        }
 	
-	        if ((updateFlags & UpdateFlags.UpdateColors) != 0)
+	        if (!font.isPacked && (updateFlags & UpdateFlags.UpdateColors) != 0) // packed fonts don't support tinting
 	        {
 	            Color topColor = _color;
 	            Color bottomColor = _useGradient ? _color2 : _color;

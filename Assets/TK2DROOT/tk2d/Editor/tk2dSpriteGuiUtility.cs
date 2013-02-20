@@ -83,11 +83,14 @@ public static class tk2dSpriteGuiUtility
 			int[] spriteLookupIndices = new int[spriteNames.Length];
 			for (int i = 0; i < spriteDefs.Length; ++i)
 			{
-				if (tk2dPreferences.inst.showIds && spriteDefs[i].name != null && spriteDefs[i].name.Length > 0)
-					spriteNames[i] = spriteDefs[i].name + "\t[" + i.ToString() + "]";
-				else
-					spriteNames[i] = spriteDefs[i].name;
-				spriteLookupIndices[i] = i;
+				if (spriteDefs[i].name != null && spriteDefs[i].name.Length > 0)
+				{
+					if (tk2dPreferences.inst.showIds)
+						spriteNames[i] = spriteDefs[i].name + "\t[" + i.ToString() + "]";
+					else
+						spriteNames[i] = spriteDefs[i].name;
+					spriteLookupIndices[i] = i;
+				}
 			}
 			System.Array.Sort(spriteLookupIndices, (int a, int b) => tk2dSpriteGuiUtility.NameCompare((spriteDefs[a]!=null)?spriteDefs[a].name:"", (spriteDefs[b]!=null)?spriteDefs[b].name:""));
 			
@@ -133,7 +136,8 @@ public static class tk2dSpriteGuiUtility
 					if (name != null && name.Length > 0)
 					{
 						GameObject scgo = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(indexEntry.spriteCollectionDataGUID), typeof(GameObject)) as GameObject;
-						return scgo.GetComponent<tk2dSpriteCollectionData>();
+						if (scgo != null)
+							return scgo.GetComponent<tk2dSpriteCollectionData>();
 					}
 				}
 			}
@@ -259,8 +263,22 @@ public static class tk2dSpriteGuiUtility
 				int newSelection = EditorGUILayout.Popup(currentSelection, spriteCollectionNames);
 				if (newSelection != currentSelection)
 				{
-					currentValue = GetSpriteCollectionDataAtIndex(newSelection, currentValue);
-					GUI.changed = true;					
+					tk2dSpriteCollectionData newData = GetSpriteCollectionDataAtIndex(newSelection, currentValue);
+					if (newData == null)
+					{
+						Debug.LogError("Unable to load sprite collection. Please rebuild index and try again.");
+					}
+					else if (newData.Count == 0)
+					{
+						EditorUtility.DisplayDialog("Error", 
+							string.Format("Sprite collection '{0}' has no sprites", newData.name), 
+							"Ok");						
+					}
+					else if (newData != currentValue)
+					{
+						currentValue = newData;
+						GUI.changed = true;						
+					}
 				}
 			}
 			
