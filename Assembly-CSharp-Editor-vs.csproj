@@ -106,7 +106,6 @@
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\MonoBehaviour.functions.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Custom Editor.cs.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\PremulVertexColor.shader" />
-     <None Include="Assets\TK2DROOT\tk2d_demo\Credits.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Asset Postprocessor.cs.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Empty Class.cs.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\Blend2TexVertexColor.shader" />

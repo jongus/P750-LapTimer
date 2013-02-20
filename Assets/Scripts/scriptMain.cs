@@ -7,7 +7,7 @@ public class scriptMain : MonoBehaviour {
 	private LocationInfo liOld;
 	private LocationInfo liNew;
 	
-	private double dLastTimestamp = 0;
+	private double dLastTimestamp = 0.0d;
 	
 	private Color cRed = new Color(1.000000000f,0.266666667f,0.180392157f, 1.0f);
 	private Color cBlue = new Color(0.243137255f,0.745098039f,1.000000000f, 1.0f);
@@ -138,36 +138,31 @@ public class scriptMain : MonoBehaviour {
 	private string UpdateSpeed() {
 		LocationInfo liTmp = Input.location.lastData;
 		string sRetVal;
-
-		//Okey, try to calculate speed
-		double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
-				/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
-		tmCurSpeed.text = dSpeed.ToString ("#0.0");
-		tmCurSpeed.Commit();
-		 
-		adAvgSpeed[iAvgSpeedIdx] = dSpeed;
-		iAvgSpeedIdx ++;
-		if(iAvgSpeedIdx == 5) iAvgSpeedIdx = 0;
-			
-		int iDivider = 0;
-		double dAvgSpeed = 0.0d;
-		for(int i = 0; i < 5; i++) {
-			if(adAvgSpeed[i] > 0.5d){
-				dAvgSpeed += adAvgSpeed[i];
-				iDivider ++;
-			}
-		}
-		if(iDivider == 0) iDivider = 1;
-		dAvgSpeed /= iDivider;
-		//dAvgSpeed += dSpeed;
-		//dAvgSpeed /= 2;
 		
-		if(dAvgSpeed > 10.0d) {
-			sRetVal = Math.Round (dAvgSpeed,0).ToString ("#0") + "";
+		if(dLastTimestamp > 1.0d) {
+			//Not the first run
+			//Okey, try to calculate speed
+			double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
+					/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
+			
+			//DEBUG
+			tmCurSpeed.text = Math.Abs(liTmp.timestamp - dLastTimestamp ).ToString ("#0.00");
+			tmCurSpeed.Commit();
+			
+			//AVG calculation here
+			
+			
+			if(dSpeed > 10.0d) {
+				sRetVal = Math.Round (dSpeed,0).ToString ("#0") + "";
+			} else {
+				sRetVal = Math.Round (dSpeed,1).ToString ("#0.0") + "";
+			}	
 		} else {
-			sRetVal = Math.Round (dAvgSpeed,1).ToString ("#0.0") + "";
+			//Okey, this is the first run, dont calculate speed
+			sRetVal = "0.0";
+			tmCurSpeed.text = "xxxx";
+			tmCurSpeed.Commit();
 		}	
-				
 		//Save current pos as last pos
 		dLastLat = (double)liTmp.latitude;
 		dLastLon = (double)liTmp.longitude;
