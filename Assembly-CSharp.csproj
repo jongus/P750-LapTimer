@@ -72,6 +72,7 @@
      <Compile Include="Assets\TK2DROOT\tk2d\Code\TileMap\tk2dTileMapColliderBuilder.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Code\TileMap\tk2dTileMapData.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Code\TileMap\tk2dTileMapMeshBuilder.cs" />
+     <Compile Include="Assets\iTween\Plugins\iTween.cs" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\MonoBehaviour.cs.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Editor Window.cs.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\LitSolidVertexColor.shader" />

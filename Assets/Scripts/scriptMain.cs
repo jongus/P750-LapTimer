@@ -7,6 +7,15 @@ public class scriptMain : MonoBehaviour {
 	private LocationInfo liOld;
 	private LocationInfo liNew;
 	
+	struct GpsInfo
+    {
+		public float Lat;
+		public float Lon;
+		public double TimeStamp;
+    };
+	
+	private GpsInfo[] asGpsInfo;
+	
 	private double dLastTimestamp = 0.0d;
 	
 	private Color cRed = new Color(1.000000000f,0.266666667f,0.180392157f, 1.0f);
@@ -71,7 +80,8 @@ public class scriptMain : MonoBehaviour {
 		btnSettings = spriteSettings.GetComponent<tk2dButton>();
 		
 		//Variables
-		adAvgSpeed = new double[5];
+		adAvgSpeed = new double[5]; //BUG??
+		asGpsInfo = new GpsInfo[3];
 		
 		//Start the location service
 		Input.location.Start(1.0f, 0.1f);
@@ -148,6 +158,8 @@ public class scriptMain : MonoBehaviour {
 			//DEBUG
 			tmCurSpeed.text = Math.Abs(liTmp.timestamp - dLastTimestamp ).ToString ("#0.00");
 			tmCurSpeed.Commit();
+			tmAvgSpeed.text = CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude ).ToString ("#0.00");
+			tmAvgSpeed.Commit ();
 			
 			//AVG calculation here
 			
@@ -277,7 +289,7 @@ public class scriptMain : MonoBehaviour {
 	}
 	
 	public static double CalculateDistanceBetweenGPSCoordinates(double lon1, double lat1, double lon2, double lat2) {
-		//Returns i meters
+		//Returns in meters
 	    const double R = 6378137; 
 	    const double degreesToRadians = Math.PI / 180; 
 	
