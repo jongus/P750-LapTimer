@@ -58,6 +58,8 @@ public class scriptMain : MonoBehaviour {
 	private double[] adAvgSpeed;
 	private int iAvgSpeedIdx = 0;
 	
+	System.IO.StreamWriter fwDebug = null; //DEBUG
+	string sDebugFile;
 	
 	 
 	// Start is called just before any of the
@@ -83,9 +85,18 @@ public class scriptMain : MonoBehaviour {
 		adAvgSpeed = new double[5]; //BUG??
 		asGpsInfo = new GpsInfo[3];
 		
+		sDebugFile = Application.persistentDataPath + "/debug.txt";
+		fwDebug = System.IO.File.CreateText(sDebugFile);
+		
 		//Start the location service
 		Input.location.Start(1.0f, 0.1f);
 		ResetGUI();
+		
+	}
+	
+	void DebugLog(string sMsg) {
+		fwDebug.WriteLine (sMsg);
+		fwDebug.Flush ();
 	}
 	
 	void ResetGUI(){
@@ -152,8 +163,11 @@ public class scriptMain : MonoBehaviour {
 		if(dLastTimestamp > 1.0d) {
 			//Not the first run
 			//Okey, try to calculate speed
-			double dSpeed = ((CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude )
-					/ Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
+			double dDist = CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude );
+			double dTimeDif = Math.Abs(liTmp.timestamp - dLastTimestamp );
+			double dSpeed = ((dDist / Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
+			
+			DebugLog(liTmp.longitude.ToString () + "\t" + liTmp.latitude.ToString () + "\t" + liTmp.timestamp + "\t" + dTimeDif.ToString () + "\t" + dDist.ToString () + "\t" + dSpeed.ToString ());
 			
 			//DEBUG
 			tmCurSpeed.text = Math.Abs(liTmp.timestamp - dLastTimestamp ).ToString ("#0.00");

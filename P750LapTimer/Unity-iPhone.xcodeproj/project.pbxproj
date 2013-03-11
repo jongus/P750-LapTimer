@@ -97,8 +97,8 @@
 /* Begin PBXFileReference section */
 		08B24F75137BFDFA00FBA309 /* iAd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = iAd.framework; path = System/Library/Frameworks/iAd.framework; sourceTree = SDKROOT; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		1D6058910D05DD3D006BFB54 /* p750laptimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "p750laptimer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		567B6273114A9F340000AA1F /* p750laptimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "p750laptimer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D6058910D05DD3D006BFB54 /* p750laptimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = p750laptimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		567B6273114A9F340000AA1F /* p750laptimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = p750laptimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5682F4B10F3B34FF007A219C /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		5692F3DC0FA9D8E500EBA2F1 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		56B7959A1442E0F20026B3DD /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -431,7 +431,7 @@
 				567B625D114A9F340000AA1F /* iPhone_target2AppDelegate.m in Sources */,
 				567B625E114A9F340000AA1F /* main.mm in Sources */,
 				567B625F114A9F340000AA1F /* RegisterClasses.cpp in Sources */,
-				567B6200014A9F340000AA1F /* mscorlib.dll.s in Sources */,
+				567B6200014A9F340000AA1F /* Assembly-CSharp.dll.s in Sources */,
 				567B6261114A9F340000AA1F /* RegisterMonoModules.cpp in Sources */,
 				8A2EF43F138549090070AA2F /* iPhone_Profiler.cpp in Sources */,
 				8A2EF57B13856A230070AA2F /* iPhone_GlesSupport.cpp in Sources */,
@@ -451,6 +451,7 @@ armv7
 				);
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)";
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -470,7 +471,7 @@ armv7
 					CoreMotion,
 					"-weak-lSystem",
 				);
-				PRODUCT_NAME = "p750laptimer";
+				PRODUCT_NAME = p750laptimer;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1";
 			};
@@ -505,7 +506,7 @@ armv7
 					"-weak-lSystem",
 					"-Wl,-S,-x",
 				);
-				PRODUCT_NAME = "p750laptimer";
+				PRODUCT_NAME = p750laptimer;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1";
 			};
@@ -534,7 +535,7 @@ armv7
 					"\"$(SRCROOT)/Libraries\"",
 				);
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_NAME = "p750laptimer";
+				PRODUCT_NAME = p750laptimer;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1";
 			};
@@ -564,7 +565,7 @@ armv7
 					"\\\"$(SRCROOT)/Libraries\\\"",
 					"\"$(SRCROOT)/Libraries\"",
 				);
-				PRODUCT_NAME = "p750laptimer";
+				PRODUCT_NAME = p750laptimer;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1";
 			};
