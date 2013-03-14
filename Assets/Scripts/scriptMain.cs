@@ -52,7 +52,7 @@ public class scriptMain : MonoBehaviour {
 
 	private bool bRunning = false;
 	
-	private const double  dMS2KN = 1.97260274d;
+	private const double  dMS2KN = 1.943844d;
 	private double dLastLat = 0;
 	private double dLastLon = 0;
 	private double[] adAvgSpeed;
@@ -82,7 +82,7 @@ public class scriptMain : MonoBehaviour {
 		btnSettings = spriteSettings.GetComponent<tk2dButton>();
 		
 		//Variables
-		adAvgSpeed = new double[5]; //BUG??
+		adAvgSpeed = new double[3]; //BUG??
 		asGpsInfo = new GpsInfo[3];
 		
 		sDebugFile = Application.persistentDataPath + "/debug.txt";
@@ -165,24 +165,39 @@ public class scriptMain : MonoBehaviour {
 			//Okey, try to calculate speed
 			double dDist = CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude );
 			double dTimeDif = Math.Abs(liTmp.timestamp - dLastTimestamp );
-			double dSpeed = ((dDist / Math.Abs(liTmp.timestamp - dLastTimestamp )) * dMS2KN);
+			double dMperSec = (dDist / Math.Abs(liTmp.timestamp - dLastTimestamp ));
+			double dSpeed = (dMperSec * dMS2KN);
 			
-			DebugLog(liTmp.longitude.ToString () + "\t" + liTmp.latitude.ToString () + "\t" + liTmp.timestamp + "\t" + dTimeDif.ToString () + "\t" + dDist.ToString () + "\t" + dSpeed.ToString ());
+			//move around speed
+			adAvgSpeed[2] = adAvgSpeed[1];
+			adAvgSpeed[0] = dSpeed;
 			
-			//DEBUG
-			tmCurSpeed.text = Math.Abs(liTmp.timestamp - dLastTimestamp ).ToString ("#0.00");
-			tmCurSpeed.Commit();
-			tmAvgSpeed.text = CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude ).ToString ("#0.00");
-			tmAvgSpeed.Commit ();
+			double dDeltaSpeed = adAvgSpeed[0] - adAvgSpeed[1];
+			if(dDeltaSpeed > 5.0d) {
+				adAvgSpeed[0] = adAvgSpeed[1]  + 5.0d;
+			} else if(dDeltaSpeed <  -5.0d) {
+				adAvgSpeed[0] = adAvgSpeed[1]  - 5.0d;
+			}
 			
 			//AVG calculation here
+			double dAvgSpeed = adAvgSpeed[0] + adAvgSpeed[1] + adAvgSpeed[2];
+			dAvgSpeed /= 3.0d;
 			
+			sRetVal = Math.Round (dAvgSpeed,0).ToString ("#0") + "";
 			
-			if(dSpeed > 10.0d) {
-				sRetVal = Math.Round (dSpeed,0).ToString ("#0") + "";
-			} else {
-				sRetVal = Math.Round (dSpeed,1).ToString ("#0.0") + "";
-			}	
+			//DEBUG
+			fwDebug.Write(liTmp.longitude.ToString() + "\t");
+			fwDebug.Write(liTmp.latitude.ToString() + "\t");
+			fwDebug.Write(liTmp.timestamp.ToString() + "\t");
+			fwDebug.Write(liTmp.horizontalAccuracy.ToString() + "\t");
+			fwDebug.Write(dDist.ToString() + "\t");
+			fwDebug.Write(dTimeDif.ToString() + "\t");
+			fwDebug.Write(dMperSec.ToString() + "\t");
+			fwDebug.Write(dSpeed.ToString() + "\t");
+			fwDebug.Write(adAvgSpeed[0].ToString() + "\t");
+			fwDebug.Write(adAvgSpeed[0].ToString() + "\n");
+			fwDebug.Flush ();
+			
 		} else {
 			//Okey, this is the first run, dont calculate speed
 			sRetVal = "0.0";
@@ -250,8 +265,6 @@ public class scriptMain : MonoBehaviour {
 				//New data from gps! 
 				tmBigInfo.text = UpdateSpeed();
 				tmBigInfo.Commit();
-				tmStatus.text = tmBigInfo.text.Length.ToString ();
-				tmStatus.Commit ();
 				//tmCurSpeed.text = UpdateSpeed();
 				//tmCurSpeed.Commit();
 				tmGPS.text = Input.location.lastData.horizontalAccuracy.ToString ("#0") + " m";
@@ -259,7 +272,9 @@ public class scriptMain : MonoBehaviour {
 				
 			} else if((dNowInEpoch() - Input.location.lastData.timestamp) > 3.0d) {
 				//We are not moving?? Handle speed in a nice way, not a real error!
-				dLastTimestamp += 3.0d;
+				//dLastTimestamp += 3.0d;
+				tmBigInfo.text = "nn";
+				tmBigInfo.Commit();
 			} 
 		    break;
 		case GpsStates.Stoped:
