@@ -157,7 +157,7 @@ public class scriptMain : MonoBehaviour {
 	}
 		
 	private string UpdateSpeed() {
-		LocationInfo liTmp = Input.location.lastData;
+        LocationInfo liTmp = Input.location.lastData;
 		string sRetVal;
 		
 		if(dLastTimestamp > 1.0d) {
@@ -170,6 +170,7 @@ public class scriptMain : MonoBehaviour {
 			
 			//move around speed
 			adAvgSpeed[2] = adAvgSpeed[1];
+			adAvgSpeed[1] = adAvgSpeed[0];
 			adAvgSpeed[0] = dSpeed;
 			
 			double dDeltaSpeed = adAvgSpeed[0] - adAvgSpeed[1];
@@ -195,20 +196,20 @@ public class scriptMain : MonoBehaviour {
 			fwDebug.Write(dMperSec.ToString() + "\t");
 			fwDebug.Write(dSpeed.ToString() + "\t");
 			fwDebug.Write(adAvgSpeed[0].ToString() + "\t");
-			fwDebug.Write(adAvgSpeed[0].ToString() + "\n");
+			fwDebug.Write(dAvgSpeed.ToString() + "\t");
+			fwDebug.Write(sRetVal + "\n");
 			fwDebug.Flush ();
-			
 		} else {
 			//Okey, this is the first run, dont calculate speed
 			sRetVal = "0.0";
-			tmCurSpeed.text = "xxxx";
-			tmCurSpeed.Commit();
+			//tmCurSpeed.text = "xxxx";
+			//tmCurSpeed.Commit();
 		}	
 		//Save current pos as last pos
 		dLastLat = (double)liTmp.latitude;
 		dLastLon = (double)liTmp.longitude;
 		dLastTimestamp = liTmp.timestamp;
-		return sRetVal;
+		return sRetVal;    
 	}
 	
 	// Update is called every frame, if the
