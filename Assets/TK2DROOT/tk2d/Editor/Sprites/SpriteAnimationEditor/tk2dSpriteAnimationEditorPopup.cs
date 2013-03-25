@@ -62,6 +62,7 @@ public class tk2dSpriteAnimationEditorPopup : EditorWindow
 			clipEditor.clipNameChangedEvent += ClipNameChanged;
 			clipEditor.clipDeletedEvent += ClipDeleted;
 			clipEditor.clipSelectionChangedEvent += ClipSelectionChanged;
+			clipEditor.hostEditorWindow = this;
 		}
 		clipEditor.animOps = animOps;
 		

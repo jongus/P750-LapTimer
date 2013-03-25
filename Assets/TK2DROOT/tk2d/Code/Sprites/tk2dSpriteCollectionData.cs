@@ -248,12 +248,36 @@ public class tk2dSpriteCollectionData : MonoBehaviour
 		return GetSpriteIdByName(name, 0);
 	}
 	
+	/// <summary>
+	/// Resolves a sprite name and returns a unique id for the sprite.
+	/// </summary>
+	/// <returns>
+	/// Unique Sprite Id. defaultValue if sprite isn't found.
+	/// </returns>
+	/// <param name='name'>Case sensitive sprite name, as defined in the sprite collection. This is usually the source filename excluding the extension</param>
 	public int GetSpriteIdByName(string name, int defaultValue)
 	{
 		inst.InitDictionary();
 		int returnValue = defaultValue;
 		if (!inst.spriteNameLookupDict.TryGetValue(name, out returnValue)) return defaultValue;
 		return returnValue; // default to first sprite
+	}
+
+	/// <summary>
+	/// Resolves a sprite name and returns a reference to a sprite definition
+	/// </summary>
+	/// <returns>
+	/// Unique Sprite Definition. null if sprite isn't found.
+	/// </returns>
+	/// <param name='name'>Case sensitive sprite name, as defined in the sprite collection. This is usually the source filename excluding the extension</param>
+	public tk2dSpriteDefinition GetSpriteDefinition(string name) {
+		int id = GetSpriteIdByName(name, -1);
+		if (id == -1) {
+			return null;
+		}
+		else {
+			return spriteDefinitions[id];
+		}
 	}
 	
 	/// <summary>

@@ -179,10 +179,15 @@ public class tk2dSpriteCollectionEditorPopup : EditorWindow, IEditorHost
 		{
 			var sprite = spriteCollectionProxy.textureParams[spriteIndex];
 			var spriteSourceTexture = sprite.texture;
-			if (spriteSourceTexture == null) continue;
+			if (spriteSourceTexture == null && sprite.name.Length == 0) continue;
 			
 			var newEntry = new SpriteCollectionEditorEntry();
 			newEntry.name = sprite.name;
+
+			if (sprite.texture == null) {
+				newEntry.name += " (missing)";
+			}
+
 			newEntry.index = spriteIndex;
 			newEntry.type = SpriteCollectionEditorEntry.Type.Sprite;
 			entries.Add(newEntry);
@@ -429,7 +434,10 @@ public class tk2dSpriteCollectionEditorPopup : EditorWindow, IEditorHost
 		spriteCollectionProxy.DeleteUnusedData();
 		spriteCollectionProxy.CopyToTarget();
 		tk2dSpriteCollectionBuilder.ResetCurrentBuild();
-		tk2dSpriteCollectionBuilder.Rebuild(_spriteCollection);
+		if (!tk2dSpriteCollectionBuilder.Rebuild(_spriteCollection)) {
+			EditorUtility.DisplayDialog("Failed to commit sprite collection", 
+				"Please check the console for more details.", "Ok");
+		}
 		spriteCollectionProxy.CopyFromSource();
 	}
 	

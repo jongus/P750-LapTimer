@@ -435,6 +435,23 @@ public class tk2dSpriteCollectionBuilder
 		}	
 	}
 
+	static bool CheckSourceAssets(tk2dSpriteCollection gen)
+	{
+		string missingTextures = "";
+
+		foreach (var param in gen.textureParams) {
+			if (param.texture == null && param.name.Length > 0) {
+				missingTextures += "  Missing texture: " + param.name;
+			}
+		}
+
+		if (missingTextures.Length > 0) {
+			Debug.LogError(string.Format("Error in sprite collection '{0}'\n{1}", gen.name, missingTextures));
+		}
+
+		return missingTextures.Length == 0;
+	}
+
     public static bool Rebuild(tk2dSpriteCollection gen)
     {
 		// avoid "recursive" build being triggered by texture watcher
@@ -455,6 +472,11 @@ public class tk2dSpriteCollectionBuilder
 		currentBuild = gen;
 		gen.Upgrade(); // upgrade if necessary. could be invoked by texture watcher.
 		
+		// Check all source assets are present, fail otherwise
+		if (!CheckSourceAssets(gen)) {
+			return false;
+		}
+
 		// Get some sensible paths to work with
 		string dataDirName = GetOrCreateDataPath(gen) + "/";
 		

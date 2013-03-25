@@ -625,8 +625,8 @@ public class tk2dTileMapEditor : Editor, ITileMapEditorHost
 		{
 			EditorGUI.indentLevel++;
 			
-			width = Mathf.Clamp(EditorGUILayout.IntField("Width", width), 1, 512);
-			height = Mathf.Clamp(EditorGUILayout.IntField("Height", height), 1, 512);
+			width = Mathf.Clamp(EditorGUILayout.IntField("Width", width), 1, tk2dEditor.TileMap.TileMapUtility.MaxWidth);
+			height = Mathf.Clamp(EditorGUILayout.IntField("Height", height), 1, tk2dEditor.TileMap.TileMapUtility.MaxHeight);
 			partitionSizeX = Mathf.Clamp(EditorGUILayout.IntField("PartitionSizeX", partitionSizeX), 4, 32);
 			partitionSizeY = Mathf.Clamp(EditorGUILayout.IntField("PartitionSizeY", partitionSizeY), 4, 32);
 			

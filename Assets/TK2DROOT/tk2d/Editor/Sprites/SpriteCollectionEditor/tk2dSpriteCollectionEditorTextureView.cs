@@ -373,82 +373,90 @@ namespace tk2dEditor.SpriteCollectionEditor
 			currentColliderColor = param.colliderColor;
 			
 			GUILayout.BeginVertical(tk2dEditorSkin.SC_BodyBackground, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-	
-			bool allowAnchor = param.anchor == tk2dSpriteCollectionDefinition.Anchor.Custom;
-			bool allowCollider = (param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.Polygon ||
-				param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.BoxCustom);
-			if (mode == Mode.Anchor && !allowAnchor) mode = Mode.Texture;
-			if (mode == Mode.Collider && !allowCollider) mode = Mode.Texture;
-			
-			Rect rect = GUILayoutUtility.GetRect(128.0f, 128.0f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-			
-			// middle mouse drag and scroll zoom
-			if (rect.Contains(Event.current.mousePosition))
+		
+			if (texture == null) 
 			{
-				if (Event.current.type == EventType.MouseDrag && Event.current.button == 2)
-				{
-					textureScrollPos -= Event.current.delta * editorDisplayScale;
-					Event.current.Use();
-					HandleUtility.Repaint();
-				}
-				if (Event.current.type == EventType.ScrollWheel)
-				{
-					editorDisplayScale -= Event.current.delta.y * 0.03f;
-					Event.current.Use();
-					HandleUtility.Repaint();
-				}
+				// Get somewhere to put the texture...
+				GUILayoutUtility.GetRect(128.0f, 128.0f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 			}
-			
-			bool alphaBlend = true;
-			textureScrollPos = GUI.BeginScrollView(rect, textureScrollPos, 
-				new Rect(0, 0, textureBorderPixels * 2 + (texture.width) * editorDisplayScale, textureBorderPixels * 2 + (texture.height) * editorDisplayScale));
-			Rect textureRect = new Rect(textureBorderPixels, textureBorderPixels, texture.width * editorDisplayScale, texture.height * editorDisplayScale);
-			texture.filterMode = FilterMode.Point;
-			GUI.DrawTexture(textureRect, texture, ScaleMode.ScaleAndCrop, alphaBlend);
+			else
+			{
+				bool allowAnchor = param.anchor == tk2dSpriteCollectionDefinition.Anchor.Custom;
+				bool allowCollider = (param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.Polygon ||
+					param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.BoxCustom);
+				if (mode == Mode.Anchor && !allowAnchor) mode = Mode.Texture;
+				if (mode == Mode.Collider && !allowCollider) mode = Mode.Texture;
+				
+				Rect rect = GUILayoutUtility.GetRect(128.0f, 128.0f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+				
+				// middle mouse drag and scroll zoom
+				if (rect.Contains(Event.current.mousePosition))
+				{
+					if (Event.current.type == EventType.MouseDrag && Event.current.button == 2)
+					{
+						textureScrollPos -= Event.current.delta * editorDisplayScale;
+						Event.current.Use();
+						HandleUtility.Repaint();
+					}
+					if (Event.current.type == EventType.ScrollWheel)
+					{
+						editorDisplayScale -= Event.current.delta.y * 0.03f;
+						Event.current.Use();
+						HandleUtility.Repaint();
+					}
+				}
+				
+				bool alphaBlend = true;
+				textureScrollPos = GUI.BeginScrollView(rect, textureScrollPos, 
+					new Rect(0, 0, textureBorderPixels * 2 + (texture.width) * editorDisplayScale, textureBorderPixels * 2 + (texture.height) * editorDisplayScale));
+				Rect textureRect = new Rect(textureBorderPixels, textureBorderPixels, texture.width * editorDisplayScale, texture.height * editorDisplayScale);
+				texture.filterMode = FilterMode.Point;
+				GUI.DrawTexture(textureRect, texture, ScaleMode.ScaleAndCrop, alphaBlend);
 
-			if (mode == Mode.Collider)
-			{
-				if (param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.BoxCustom)
-					DrawCustomBoxColliderEditor(textureRect, param, texture);
-				if (param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.Polygon)
-					DrawPolygonColliderEditor(textureRect, ref param.polyColliderIslands, texture, false);
+				if (mode == Mode.Collider)
+				{
+					if (param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.BoxCustom)
+						DrawCustomBoxColliderEditor(textureRect, param, texture);
+					if (param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.Polygon)
+						DrawPolygonColliderEditor(textureRect, ref param.polyColliderIslands, texture, false);
+				}
+				
+				if (mode == Mode.Texture && param.customSpriteGeometry)
+				{
+					DrawPolygonColliderEditor(textureRect, ref param.geometryIslands, texture, true);
+				}
+				
+				// Anchor
+				if (mode == Mode.Anchor)
+				{
+					Color handleColor = new Color(0,0,0,0.2f);
+					Color lineColor = Color.white;
+					Vector2 anchor = new Vector2(param.anchorX, param.anchorY);
+					Vector2 origin = new Vector2(textureRect.x, textureRect.y);
+					
+					int id = 99999;
+					anchor = (tk2dGuiUtility.PositionHandle(id, anchor * editorDisplayScale + origin, 12.0f, handleColor, handleColor ) - origin) / editorDisplayScale;
+		
+					Color oldColor = Handles.color;
+					Handles.color = lineColor;
+					float w = Mathf.Max(rect.width, texture.width * editorDisplayScale);
+					float h = Mathf.Max(rect.height, texture.height * editorDisplayScale);
+					
+					Handles.DrawLine(new Vector3(textureRect.x, textureRect.y + anchor.y * editorDisplayScale, 0), new Vector3(textureRect.x + w, textureRect.y + anchor.y * editorDisplayScale, 0));
+					Handles.DrawLine(new Vector3(textureRect.x + anchor.x * editorDisplayScale, textureRect.y + 0, 0), new Vector3(textureRect.x + anchor.x * editorDisplayScale, textureRect.y + h, 0));
+					Handles.color = oldColor;
+		
+					// constrain
+					param.anchorX = Mathf.Clamp(Mathf.Round(anchor.x), 0.0f, texture.width);
+					param.anchorY = Mathf.Clamp(Mathf.Round(anchor.y), 0.0f, texture.height);
+					
+					tk2dGuiUtility.SetPositionHandleValue(id, new Vector2(param.anchorX, param.anchorY));
+					
+					HandleUtility.Repaint();			
+				}
+				GUI.EndScrollView();
 			}
-			
-			if (mode == Mode.Texture && param.customSpriteGeometry)
-			{
-				DrawPolygonColliderEditor(textureRect, ref param.geometryIslands, texture, true);
-			}
-			
-			// Anchor
-			if (mode == Mode.Anchor)
-			{
-				Color handleColor = new Color(0,0,0,0.2f);
-				Color lineColor = Color.white;
-				Vector2 anchor = new Vector2(param.anchorX, param.anchorY);
-				Vector2 origin = new Vector2(textureRect.x, textureRect.y);
 				
-				int id = 99999;
-				anchor = (tk2dGuiUtility.PositionHandle(id, anchor * editorDisplayScale + origin, 12.0f, handleColor, handleColor ) - origin) / editorDisplayScale;
-	
-				Color oldColor = Handles.color;
-				Handles.color = lineColor;
-				float w = Mathf.Max(rect.width, texture.width * editorDisplayScale);
-				float h = Mathf.Max(rect.height, texture.height * editorDisplayScale);
-				
-				Handles.DrawLine(new Vector3(textureRect.x, textureRect.y + anchor.y * editorDisplayScale, 0), new Vector3(textureRect.x + w, textureRect.y + anchor.y * editorDisplayScale, 0));
-				Handles.DrawLine(new Vector3(textureRect.x + anchor.x * editorDisplayScale, textureRect.y + 0, 0), new Vector3(textureRect.x + anchor.x * editorDisplayScale, textureRect.y + h, 0));
-				Handles.color = oldColor;
-	
-				// constrain
-				param.anchorX = Mathf.Clamp(Mathf.Round(anchor.x), 0.0f, texture.width);
-				param.anchorY = Mathf.Clamp(Mathf.Round(anchor.y), 0.0f, texture.height);
-				
-				tk2dGuiUtility.SetPositionHandleValue(id, new Vector2(param.anchorX, param.anchorY));
-				
-				HandleUtility.Repaint();			
-			}
-			GUI.EndScrollView();
-			
 			// Draw toolbar
 			DrawToolbar(param);
 			

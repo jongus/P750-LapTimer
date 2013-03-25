@@ -4,18 +4,14 @@ using System.Collections.Generic;
 using System;
 
 public class scriptMain : MonoBehaviour {
-	private LocationInfo liOld;
-	private LocationInfo liNew;
-	
-	struct GpsInfo
-    {
-		public float Lat;
-		public float Lon;
-		public double TimeStamp;
-    };
-	
-	private GpsInfo[] asGpsInfo;
-	
+	private double dCurSpeed = 0.0;
+	private double dAccDist = 0.0;
+	private int iWaitForGPS = 0;
+	private const double  dMS2KN = 1.943844d;
+	private double dLastLat = 0;
+	private double dLastLon = 0;
+	private double[] adAvgSpeed;
+	private int iAvgSpeedIdx = 0;	
 	private double dLastTimestamp = 0.0d;
 	
 	private Color cRed = new Color(1.000000000f,0.266666667f,0.180392157f, 1.0f);
@@ -23,7 +19,7 @@ public class scriptMain : MonoBehaviour {
 	private Color cGrey = new Color(0.635294118f,0.698039216f,0.749019608f, 1.0f);
 	private Color cWhite = new Color(1.0f, 1.0f, 1.0f, 1.0f);
 	
-	private tk2dTextMesh tmStatus; //DEBUG
+	private tk2dTextMesh tmStatus;
 	private tk2dTextMesh tmMaxSpeed;
 	private tk2dTextMesh tmAvgSpeed;
 	private tk2dTextMesh tmCurSpeed;
@@ -52,11 +48,7 @@ public class scriptMain : MonoBehaviour {
 
 	private bool bRunning = false;
 	
-	private const double  dMS2KN = 1.943844d;
-	private double dLastLat = 0;
-	private double dLastLon = 0;
-	private double[] adAvgSpeed;
-	private int iAvgSpeedIdx = 0;
+	
 	
 	System.IO.StreamWriter fwDebug = null; //DEBUG
 	string sDebugFile;
@@ -83,7 +75,6 @@ public class scriptMain : MonoBehaviour {
 		
 		//Variables
 		adAvgSpeed = new double[3]; //BUG??
-		asGpsInfo = new GpsInfo[3];
 		
 		sDebugFile = Application.persistentDataPath + "/debug.txt";
 		fwDebug = System.IO.File.CreateText(sDebugFile);
@@ -154,16 +145,23 @@ public class scriptMain : MonoBehaviour {
 				tmEnableDisableText.Commit ();
 			}
 		}
+		if(bEnableWarning == true) {
+			tmCurSpeed.text = "--- kn";
+			tmCurSpeed.Commit();
+			tmGPS.text = "--- m";
+			tmGPS.Commit ();
+			iWaitForGPS = 0;
+		}
 	}
 		
-	private string UpdateSpeed() {
+	private void UpdateSpeed() {
         LocationInfo liTmp = Input.location.lastData;
-		string sRetVal;
 		
-		if(dLastTimestamp > 1.0d) {
+		if(iWaitForGPS  >= 4) {
 			//Not the first run
 			//Okey, try to calculate speed
 			double dDist = CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude );
+			dAccDist += dDist;
 			double dTimeDif = Math.Abs(liTmp.timestamp - dLastTimestamp );
 			double dMperSec = (dDist / Math.Abs(liTmp.timestamp - dLastTimestamp ));
 			double dSpeed = (dMperSec * dMS2KN);
@@ -183,11 +181,12 @@ public class scriptMain : MonoBehaviour {
 			//AVG calculation here
 			double dAvgSpeed = adAvgSpeed[0] + adAvgSpeed[1] + adAvgSpeed[2];
 			dAvgSpeed /= 3.0d;
+			dCurSpeed = dAvgSpeed;
 			
-			sRetVal = Math.Round (dAvgSpeed,0).ToString ("#0") + "";
+			//sRetVal = Math.Round (dAvgSpeed,0).ToString ("#0") + "";
 			
 			//DEBUG
-			fwDebug.Write(liTmp.longitude.ToString() + "\t");
+			/*fwDebug.Write(liTmp.longitude.ToString() + "\t");
 			fwDebug.Write(liTmp.latitude.ToString() + "\t");
 			fwDebug.Write(liTmp.timestamp.ToString() + "\t");
 			fwDebug.Write(liTmp.horizontalAccuracy.ToString() + "\t");
@@ -198,18 +197,18 @@ public class scriptMain : MonoBehaviour {
 			fwDebug.Write(adAvgSpeed[0].ToString() + "\t");
 			fwDebug.Write(dAvgSpeed.ToString() + "\t");
 			fwDebug.Write(sRetVal + "\n");
-			fwDebug.Flush ();
+			fwDebug.Flush (); */
 		} else {
 			//Okey, this is the first run, dont calculate speed
-			sRetVal = "0.0";
-			//tmCurSpeed.text = "xxxx";
+			iWaitForGPS ++;
+			dCurSpeed = 0.0;
+			//tmCurSpeed.text = Math.Round (dCurSpeed,0).ToString ("#0");
 			//tmCurSpeed.Commit();
 		}	
 		//Save current pos as last pos
 		dLastLat = (double)liTmp.latitude;
 		dLastLon = (double)liTmp.longitude;
-		dLastTimestamp = liTmp.timestamp;
-		return sRetVal;    
+		dLastTimestamp = liTmp.timestamp;   
 	}
 	
 	// Update is called every frame, if the
@@ -236,7 +235,7 @@ public class scriptMain : MonoBehaviour {
 		case GpsStates.Faild:
 			if(gpsState != oldGpsState ) {
 				//Enter state
-				tmStatus.text = "Faild to start GPS!";
+				tmStatus.text = "No GPS data!";
 				tmStatus.Commit ();
 				ShowWarning (true);
 				EnableStartStop (false);
@@ -246,7 +245,7 @@ public class scriptMain : MonoBehaviour {
 		case GpsStates.Initializing:
 			if(gpsState != oldGpsState ) {
 				//Enter state
-				tmStatus.text = "GPS initilizing";
+				tmStatus.text = "No GPS data!";
 				tmStatus.Commit ();
 				ShowWarning (true);
 				EnableStartStop (false);
@@ -263,25 +262,23 @@ public class scriptMain : MonoBehaviour {
 			}
 			//Do what we should!
 			if(Input.location.lastData.timestamp != dLastTimestamp ) {
-				//New data from gps! 
-				tmBigInfo.text = UpdateSpeed();
-				tmBigInfo.Commit();
-				//tmCurSpeed.text = UpdateSpeed();
-				//tmCurSpeed.Commit();
+				//New data from gps!
+				UpdateSpeed();
+				tmCurSpeed.text = Math.Round (dCurSpeed ,0).ToString ("#0") + "kn";
+				tmCurSpeed.Commit();
 				tmGPS.text = Input.location.lastData.horizontalAccuracy.ToString ("#0") + " m";
 				tmGPS.Commit ();
 				
 			} else if((dNowInEpoch() - Input.location.lastData.timestamp) > 3.0d) {
 				//We are not moving?? Handle speed in a nice way, not a real error!
-				//dLastTimestamp += 3.0d;
-				tmBigInfo.text = "nn";
-				tmBigInfo.Commit();
+				tmCurSpeed.text  = "--- kn";
+				tmCurSpeed.Commit();
 			} 
 		    break;
 		case GpsStates.Stoped:
 			if(gpsState != oldGpsState ) {
 				//Enter state
-				tmStatus.text = "GPS Stoped";
+				tmStatus.text = "No GPS data!";
 				tmStatus.Commit ();
 				ShowWarning (true);
 				EnableStartStop (false);
@@ -321,7 +318,7 @@ public class scriptMain : MonoBehaviour {
 	public static double CalculateDistanceBetweenGPSCoordinates(double lon1, double lat1, double lon2, double lat2) {
 		//Returns in meters
 	    const double R = 6378137; 
-	    const double degreesToRadians = Math.PI / 180; 
+	    const double degreesToRadians = Math.PI / 180.0d; 
 	
 	    //convert from fractional degrees (GPS) to radians 
 	    lon1 *= degreesToRadians; 

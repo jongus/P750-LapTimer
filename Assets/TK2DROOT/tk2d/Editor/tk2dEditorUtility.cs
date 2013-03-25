@@ -5,8 +5,8 @@ using System.IO;
 
 public static class tk2dEditorUtility
 {
-	public static double version = 1.9;
-	public static int releaseId = 0; // < -10000 = alpha, other negative = beta release, 0 = final, positive = final patch
+	public static double version = 1.91;
+	public static int releaseId = 1; // < -10000 = alpha, other negative = beta release, 0 = final, positive = final patch
 	
 	public static string ReleaseStringIdentifier(double _version, int _releaseId)
 	{
@@ -131,6 +131,7 @@ public static class tk2dEditorUtility
 	{
 		tk2dIndex newIndex = ScriptableObject.CreateInstance<tk2dIndex>();
 		newIndex.version = tk2dIndex.CURRENT_VERSION;
+		newIndex.hideFlags = HideFlags.DontSave;
 		
 		List<string> rebuildSpriteCollectionPaths = new List<string>();
 		
@@ -212,7 +213,9 @@ public static class tk2dEditorUtility
 		EditorUtility.ClearProgressBar();
 		
 		// Create index
+		newIndex.hideFlags = 0; // to save it
 		AssetDatabase.CreateAsset(newIndex, indexPath);
+		AssetDatabase.SaveAssets();
 		
 		// unload all unused assets
 		tk2dEditorUtility.UnloadUnusedAssets();
@@ -324,8 +327,8 @@ public static class tk2dEditorUtility
 		Object[] previousSelectedObjects = Selection.objects;
 		Selection.objects = new Object[0];
 		
-		EditorUtility.UnloadUnusedAssets();
 		System.GC.Collect();
+		EditorUtility.UnloadUnusedAssets();
 		
 		index = null;
 		

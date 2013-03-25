@@ -176,32 +176,39 @@ class tk2dAnimatedSpriteEditor : tk2dSpriteEditor
 		
 		tk2dGenericIndexItem[] animIndex = tk2dEditorUtility.GetOrCreateIndex().GetSpriteAnimations();
 		tk2dSpriteAnimation anim = null;
+		int clipId = -1;
 		foreach (var animIndexItem in animIndex)
 		{
 			tk2dSpriteAnimation a = animIndexItem.GetAsset<tk2dSpriteAnimation>();
 			if (a != null && a.clips != null && a.clips.Length > 0)
 			{
-				anim = a;
-				break;
+				for (int i = 0; i < a.clips.Length; ++i) {
+					if (!a.clips[i].Empty &&
+						a.clips[i].frames[0].spriteCollection != null &&
+						a.clips[i].frames[0].spriteId >= 0) {
+						clipId = i;
+						break;
+					}
+				}
+
+				if (clipId != -1) {
+					anim = a;
+					break;
+				}
 			}
 		}
 		
-		if (anim == null)
+		if (anim == null || clipId == -1)
 		{
 			EditorUtility.DisplayDialog("Create Animated Sprite", "Unable to create animated sprite as no SpriteAnimations have been found.", "Ok");
 			return;
 		}
 		
-		if (anim.clips[0].frames.Length == 0 || anim.clips[0].frames[0].spriteCollection == null)
-		{
-			EditorUtility.DisplayDialog("Create Animated Sprite", "Invalid SpriteAnimation has been found.", "Ok");
-			return;
-		}
-
 		GameObject go = tk2dEditorUtility.CreateGameObjectInScene("AnimatedSprite");
 		tk2dAnimatedSprite sprite = go.AddComponent<tk2dAnimatedSprite>();
-		sprite.SwitchCollectionAndSprite(anim.clips[0].frames[0].spriteCollection, anim.clips[0].frames[0].spriteId);
+		sprite.SwitchCollectionAndSprite(anim.clips[clipId].frames[0].spriteCollection, anim.clips[clipId].frames[0].spriteId);
 		sprite.anim = anim;
+		sprite.clipId = clipId;
 		sprite.Build();
 		
 		Selection.activeGameObject = go;

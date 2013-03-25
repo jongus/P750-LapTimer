@@ -21,39 +21,38 @@ class tk2dSpriteEditor : Editor
 	void OnDestroy()
 	{
 		thumbnailCache.Destroy();
+		tk2dGrid.Done();
 	}
 	
+	// Callback and delegate
+	void SpriteChangedCallbackImpl(tk2dSpriteCollectionData spriteCollection, int spriteId, object data)
+	{
+		tk2dBaseSprite s = target as tk2dBaseSprite;
+		if (s != null)
+		{
+			s.SwitchCollectionAndSprite(spriteCollection, spriteId);
+			s.EditMode__CreateCollider();
+			EditorUtility.SetDirty(target);
+		}
+	}
+	tk2dSpriteGuiUtility.SpriteChangedCallback _spriteChangedCallbackInstance = null;
+	tk2dSpriteGuiUtility.SpriteChangedCallback spriteChangedCallbackInstance {
+		get {
+			if (_spriteChangedCallbackInstance == null) {
+				_spriteChangedCallbackInstance = new tk2dSpriteGuiUtility.SpriteChangedCallback( SpriteChangedCallbackImpl );
+			}
+			return _spriteChangedCallbackInstance;
+		}
+	}
 
 	protected void DrawSpriteEditorGUI(tk2dBaseSprite sprite)
 	{
-		var newCollection = tk2dSpriteGuiUtility.SpriteCollectionPopup("Collection", sprite.Collection, true, sprite.spriteId);
-		if (sprite.Collection != newCollection)
-		{
-			if (sprite.Collection == null)
-				sprite.Collection = newCollection;
-			
-			int spriteId = sprite.spriteId;
-			if (sprite.spriteId < 0 || sprite.spriteId >= sprite.Collection.Count 
-				|| !sprite.Collection.inst.spriteDefinitions[sprite.spriteId].Valid)
-				spriteId = sprite.Collection.FirstValidDefinitionIndex;
-			sprite.SwitchCollectionAndSprite(newCollection, spriteId);
-			sprite.ForceBuild();
-		}
-		
-        if (sprite.Collection)
-        {
-            int newSpriteId = sprite.spriteId;
+		Event ev = Event.current;
+		tk2dSpriteGuiUtility.SpriteSelector( sprite.Collection, sprite.spriteId, spriteChangedCallbackInstance, null );
 
-			// sanity check sprite id
-			if (sprite.spriteId < 0 || sprite.spriteId >= sprite.Collection.Count 
-				|| !sprite.Collection.inst.spriteDefinitions[sprite.spriteId].Valid)
-			{
-				newSpriteId = sprite.Collection.inst.FirstValidDefinitionIndex;
-			}
-			
-			newSpriteId = tk2dSpriteGuiUtility.SpriteSelectorPopup("Sprite", sprite.spriteId, sprite.Collection);
-			if (tk2dPreferences.inst.displayTextureThumbs)
-			{
+        if (sprite.Collection != null)
+        {
+        	if (tk2dPreferences.inst.displayTextureThumbs) {
 				tk2dSpriteDefinition def = sprite.GetCurrentSpriteDef();
 				if (sprite.Collection.version < 1 || def.texelSize == Vector2.zero)
 				{
@@ -70,28 +69,18 @@ class tk2dSpriteEditor : Editor
 					GUILayout.BeginHorizontal();
 					EditorGUILayout.PrefixLabel(" ");
 
-					Vector2 texSize = thumbnailCache.GetSpriteSizePixels(def);
-					float w = texSize.x;
-					float h = texSize.y;
-					float maxSize = 128.0f;
-					if (w > maxSize)
-					{
-						h = h / w * maxSize;
-						w = maxSize;
-					}
-					
-					Rect r = GUILayoutUtility.GetRect(w, h, GUILayout.ExpandWidth(false));
-					thumbnailCache.DrawSpriteTexture(r, def);
+					int tileSize = 128;
+					Rect r = GUILayoutUtility.GetRect(tileSize, tileSize, GUILayout.ExpandWidth(false));
+					tk2dGrid.Draw(r);
+					thumbnailCache.DrawSpriteTextureInRect(r, def, Color.white);
 
 					GUILayout.EndHorizontal();
-				}
-			}
 
-			if (newSpriteId != sprite.spriteId)
-			{
-				sprite.spriteId = newSpriteId;
-				sprite.EditMode__CreateCollider();
-				GUI.changed = true;
+					r = GUILayoutUtility.GetLastRect();
+					if (ev.type == EventType.MouseDown && ev.button == 0 && r.Contains(ev.mousePosition)) {
+						tk2dSpriteGuiUtility.SpriteSelectorPopup( sprite.Collection, sprite.spriteId, spriteChangedCallbackInstance, null );
+					}
+				}
 			}
 
             sprite.color = EditorGUILayout.ColorField("Color", sprite.color);

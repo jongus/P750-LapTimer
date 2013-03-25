@@ -113,8 +113,7 @@ public class tk2dAnimatedSprite : tk2dSprite
 	{
 		var clip = anim.clips[clipId];
 		tk2dAnimatedSprite animSprite = go.AddComponent<tk2dAnimatedSprite>();
-		animSprite.Collection = clip.frames[0].spriteCollection;
-		animSprite.spriteId = clip.frames[0].spriteId;
+		animSprite.SwitchCollectionAndSprite(clip.frames[0].spriteCollection, clip.frames[0].spriteId);
 		animSprite.anim = anim;
 		return animSprite;
 	}
@@ -249,7 +248,7 @@ public class tk2dAnimatedSprite : tk2dSprite
 	/// </summary>
 	public bool IsPlaying(string name)
 	{
-		return CurrentClip != null && CurrentClip.name == name && Playing;
+		return Playing && CurrentClip != null && CurrentClip.name == name;
 	}
 
 	/// <summary>
@@ -257,7 +256,7 @@ public class tk2dAnimatedSprite : tk2dSprite
 	/// </summary>
 	public bool IsPlaying(tk2dSpriteAnimationClip clip)
 	{
-		return CurrentClip != null && CurrentClip == clip && Playing;
+		return Playing && CurrentClip != null && CurrentClip == clip;
 	}
 
 

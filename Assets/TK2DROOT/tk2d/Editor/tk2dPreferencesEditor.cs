@@ -2,165 +2,202 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 
-public class tk2dPreferences
-{
-	static tk2dPreferences _inst = null;	
-	public static tk2dPreferences inst
-	{
-		get 
-		{
-			if (_inst == null)
-			{
-				_inst = new tk2dPreferences();
-				_inst.Read();
+public class tk2dPreferences {
+
+	// Serialized fields
+	public bool displayTextureThumbs = true;
+	
+	public bool autoRebuild = true;
+	public bool showIds = false;
+	public bool isProSkin = true;
+	public string platform = "";
+	public bool displayEditSpriteButton = false;
+
+	public int spriteCollectionListWidth {
+		get { return _spriteCollectionListWidth; }
+		set { if (_spriteCollectionListWidth != value) _spriteCollectionListWidth = value; Save(); }
+	}
+	public int spriteCollectionInspectorWidth {
+		get { return _spriteCollectionInspectorWidth; }
+		set { if (_spriteCollectionInspectorWidth != value) _spriteCollectionInspectorWidth = value; Save(); }
+	}
+	public int animListWidth {
+		get { return _animListWidth; }
+		set { if (_animListWidth != value) _animListWidth = value; Save(); }
+	}
+	public int animInspectorWidth {
+		get { return _animInspectorWidth; }
+		set { if (_animInspectorWidth != value) _animInspectorWidth = value; Save(); }
+	}
+	public int animFrameWidth {
+		get { return _animFrameWidth; }
+		set { if (_animFrameWidth != value) _animFrameWidth = value; Save(); }
+	}
+	public int spriteThumbnailSize {
+		get { return _spriteThumbnailSize; }
+		set { if (_spriteThumbnailSize != value) _spriteThumbnailSize = value; Save(); }
+	}
+
+	int _spriteCollectionListWidth = 200;
+	int _spriteCollectionInspectorWidth = 260;
+	int _animListWidth = 200;
+	int _animInspectorWidth = 260;
+	int _animFrameWidth = -1;
+	int _spriteThumbnailSize = 128;
+
+	// Grid settings
+
+	public tk2dGrid.Type gridType {
+		get { return _gridType; }
+		set {
+			if (_gridType != value) {
+				_gridType = value;
+				tk2dGrid.Done();
+				Save();
+			}
+		}
+	}
+	public Color customGridColor0 {
+		get { return _customGridColor0; }
+		set { 
+			if (_customGridColor0 != value) {
+				_customGridColor0 = value;
+				tk2dGrid.Done();
+				Save();
+			}
+		}
+	}
+	public Color customGridColor1 {
+		get { return _customGridColor1; }
+		set { 
+			if (_customGridColor1 != value) {
+				_customGridColor1 = value;
+				tk2dGrid.Done();
+				Save();
+			}
+		}
+	}
+	
+	tk2dGrid.Type _gridType = tk2dGrid.Type.DarkChecked;
+	Color _customGridColor0 = Color.white;
+	Color _customGridColor1 = Color.gray;
+
+	// Instance
+	static tk2dPreferences _inst = null;
+	public static tk2dPreferences inst {
+		get {
+			if (_inst == null) {
+				_inst = Load();
 			}
 			return _inst;
 		}
 	}
-	
-	bool _displayTextureThumbs;
-	bool _horizontalAnimDisplay;
-	bool _groupAnimDisplay;
-	bool _autoRebuild;
-	bool _showIds;
-	bool _isProSkin;
-	int _numGroupedAnimationFrames;
-	string _platform;
 
-	public const int default_listWidth = 200;
-	public const int default_InspectorWidth = 260;
+	public static tk2dPreferences Defaults {
+		get { return new tk2dPreferences(); }
+	}
 
-	int _spriteCollectionListWidth;
-	int _spriteCollectionInspectorWidth;
+	private tk2dPreferences() {
+	}
 
-	int _animListWidth;
-	int _animInspectorWidth;
-	int _animFrameWidth;
-	int _animBackground;
+	static tk2dPreferences Load() {
+		tk2dPreferences returnValue = null;
 
-	public const string default_platform = "";
-
-	public bool displayTextureThumbs { get { return _displayTextureThumbs; } set { if (_displayTextureThumbs != value) { _displayTextureThumbs = value; Write(); } } }
-	public bool horizontalAnimDisplay { get { return _horizontalAnimDisplay; } set { if (_horizontalAnimDisplay != value) { _horizontalAnimDisplay = value; Write(); } } }
-	public bool groupAnimDisplay { get { return _groupAnimDisplay; } set { if (_groupAnimDisplay != value) { _groupAnimDisplay = value; Write(); } } }
-	public bool autoRebuild { get { return _autoRebuild; } set { if (_autoRebuild != value) { _autoRebuild = value; Write(); } } }
-	public bool showIds { get { return _showIds; } set { if (_showIds != value) { _showIds = value; Write(); } } }
-	public bool isProSkin { get { return _isProSkin; } set { if (_isProSkin != value) { _isProSkin = value; Write(); } } }
-	public int numGroupedAnimationFrames { get { return _numGroupedAnimationFrames; } set { if (_numGroupedAnimationFrames != value) { _numGroupedAnimationFrames = value; Write(); } } }
-	public int spriteCollectionInspectorWidth { get { return _spriteCollectionInspectorWidth; } set { if (_spriteCollectionInspectorWidth != value) { _spriteCollectionInspectorWidth = value; Write(); } } }
-	public int spriteCollectionListWidth { get { return _spriteCollectionListWidth; } set { if (_spriteCollectionListWidth != value) { _spriteCollectionListWidth = value; Write(); } } }
-	public int animInspectorWidth { get { return _animInspectorWidth; } set { if (_animInspectorWidth != value) { _animInspectorWidth = value; Write(); } } }
-	public int animListWidth { get { return _animListWidth; } set { if (_animListWidth != value) { _animListWidth = value; Write(); } } }
-	public int animFrameWidth { get { return _animFrameWidth; } set { if (_animFrameWidth != value) { _animFrameWidth = value; Write(); } } }
-	public int animBackground { get { return _animBackground; } set { if (_animBackground != value) { _animBackground = value; Write(); } } }
-	public string platform { 
-		get { return _platform; } 
-		set 
-		{  
-			if (_platform != value) 
-			{ 
-				_platform = value; 
-				Write(); 
-
-				// mirror to where it matters
-				tk2dSystem.CurrentPlatform = _platform;
-
-				// tell the editor things have changed
-				tk2dSystemUtility.PlatformChanged();
+		string keyName = "tk2dPreferences";
+		if (EditorPrefs.HasKey(keyName)) {
+			try {
+				string s = EditorPrefs.GetString(keyName, "");
+				if (s.Length > 0) {
+					System.IO.MemoryStream ms = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(s));
+					System.Xml.XmlReader reader = new System.Xml.XmlTextReader(ms);
+					System.Xml.Serialization.XmlSerializer x = new System.Xml.Serialization.XmlSerializer(typeof(tk2dPreferences));
+					returnValue = (tk2dPreferences)x.Deserialize(reader);
+				}
 			} 
-		} 
+			catch { }
+		}
+
+		if (returnValue == null) {
+			returnValue = new tk2dPreferences();
+		}
+
+		return returnValue;
 	}
 
-	const string prefix = "tk2d";
-
-	void Read()
-	{
-		_displayTextureThumbs = EditorPrefs.GetBool(prefix + "_displayTextureThumbs", true);
-		_horizontalAnimDisplay = EditorPrefs.GetBool(prefix + "_horizontalAnimDisplay", false);
-		_autoRebuild = EditorPrefs.GetBool(prefix + "_autoRebuild", true);
-		_showIds = EditorPrefs.GetBool(prefix + "_showIds", false);
-		_isProSkin = EditorPrefs.GetBool(prefix + "_proSkin", false);
-		_groupAnimDisplay = EditorPrefs.GetBool(prefix + "_groupAnimDisplay", false);
-
-		_numGroupedAnimationFrames = EditorPrefs.GetInt(prefix + "_numGroupedAnimationFrames", 30);
-		_spriteCollectionListWidth = EditorPrefs.GetInt(prefix + "_spriteCollectionListWidth", default_listWidth);
-		_spriteCollectionInspectorWidth = EditorPrefs.GetInt(prefix + "_spriteCollectionInspectorWidth", default_InspectorWidth);
-		_animListWidth = EditorPrefs.GetInt(prefix + "_animListWidth", default_listWidth);
-		_animFrameWidth = EditorPrefs.GetInt(prefix + "_animFrameWidth", -1);
-		_animBackground = EditorPrefs.GetInt(prefix + "_animBackground", 0);
-		_animInspectorWidth = EditorPrefs.GetInt(prefix + "_animInspectorWidth", default_InspectorWidth);
-		_platform = EditorPrefs.GetString(prefix + "_platform", default_platform);
+	/// <summary>
+	/// Save tk2dPreferences
+	/// </summary>
+	public void Save() {
+		System.Xml.Serialization.XmlSerializer x = new System.Xml.Serialization.XmlSerializer(typeof(tk2dPreferences));
+		string xml = "";
+		using (var ms = new System.IO.MemoryStream()) {
+			x.Serialize( ms, this );
+			xml = System.Text.Encoding.UTF8.GetString(ms.ToArray());
+		}
+		EditorPrefs.SetString("tk2dPreferences", xml);
 	}
-	
-	public void Write()
-	{
-		// sanitize values
-		_spriteCollectionListWidth = Mathf.Clamp(_spriteCollectionListWidth, 120, 400);
-		_spriteCollectionInspectorWidth = Mathf.Clamp(_spriteCollectionInspectorWidth, 260, 600);
 
-		EditorPrefs.SetBool(prefix + "_displayTextureThumbs", _displayTextureThumbs);
-		EditorPrefs.SetBool(prefix + "_horizontalAnimDisplay", _horizontalAnimDisplay);
-		EditorPrefs.SetBool(prefix + "_autoRebuild", _autoRebuild);
-		EditorPrefs.SetBool(prefix + "_showIds", _showIds);
-		EditorPrefs.SetBool(prefix + "_proSkin", _isProSkin);
-		EditorPrefs.SetBool(prefix + "_groupAnimDisplay", _groupAnimDisplay);
-
-		EditorPrefs.SetInt(prefix + "_numGroupedAnimationFrames", _numGroupedAnimationFrames);
-		EditorPrefs.SetInt(prefix + "_spriteCollectionListWidth", _spriteCollectionListWidth);
-		EditorPrefs.SetInt(prefix + "_spriteCollectionInspectorWidth", _spriteCollectionInspectorWidth);
-
-		EditorPrefs.SetInt(prefix + "_animListWidth", _animListWidth);
-		EditorPrefs.SetInt(prefix + "_animFrameWidth", _animFrameWidth);
-		EditorPrefs.SetInt(prefix + "_animBackground", _animBackground);
-		EditorPrefs.SetInt(prefix + "_animInspectorWidth", _animInspectorWidth);
-
-		EditorPrefs.SetString(prefix + "_platform", _platform);
+	public void Print() {
+		System.Xml.Serialization.XmlSerializer x = new System.Xml.Serialization.XmlSerializer(typeof(tk2dPreferences));
+		string xml = "";
+		using (var ms = new System.IO.MemoryStream()) {
+			x.Serialize( ms, this );
+			xml = System.Text.Encoding.UTF8.GetString(ms.ToArray());
+		}
+		Debug.Log(xml);
 	}
 }
 
 public class tk2dPreferencesEditor : EditorWindow
 {
 	GUIContent label_spriteThumbnails = new GUIContent("Sprite Thumbnails", "Turn off sprite thumbnails to save memory.");
-	
-	GUIContent label_animationFrames = new GUIContent("Animation Frame Display", "Select the direction of frames in the SpriteAnimation inspector.");
-	GUIContent label_animFrames_Horizontal = new GUIContent("Horizontal");
-	GUIContent label_animFrames_Vertical = new GUIContent("Vertical");
-	
-	GUIContent label_autoRebuild = new GUIContent("Auto Rebuild", "Auto rebuild sprite collections when source textures have changed.");
-	GUIContent label_groupAnimDisplay = new GUIContent("Group Animation Display", "Group frames, and allow changing frame count in SpriteAnimation inspector.");
+	GUIContent label_displayEditButton = new GUIContent("Display Edit Button", "Display edit shortcut on sprite picker");
 
+	GUIContent label_autoRebuild = new GUIContent("Auto Rebuild", "Auto rebuild sprite collections when source textures have changed.");
 	GUIContent label_showIds = new GUIContent("Show Ids", "Show sprite and animation Ids.");
-	
-	GUIContent label_numGroupedAnimationFrames = new GUIContent("Grouped Frames", "Maximum number of frames to group.");
 	
 #if (UNITY_3_0 || UNITY_3_1 || UNITY_3_2 || UNITY_3_3 || UNITY_3_4)
 	GUIContent label_proSkin = new GUIContent("Pro Skin", "Select this to use the Dark skin.");
 #endif	
+
+	Vector2 scroll = Vector2.zero;
+
 	void OnGUI()
 	{
 		tk2dPreferences prefs = tk2dPreferences.inst;
-		
+		scroll = GUILayout.BeginScrollView(scroll, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 		EditorGUIUtility.LookLikeControls(150.0f);
 		
 		prefs.displayTextureThumbs = EditorGUILayout.Toggle(label_spriteThumbnails, prefs.displayTextureThumbs);
-		
-		int had = EditorGUILayout.Popup(label_animationFrames, prefs.horizontalAnimDisplay?0:1, new GUIContent[] { label_animFrames_Horizontal, label_animFrames_Vertical } );
-		prefs.horizontalAnimDisplay = (had == 0)?true:false;
-		EditorGUILayout.Toggle(label_groupAnimDisplay, prefs.groupAnimDisplay);
-		int newNumGroupedAnimationFrames = EditorGUILayout.IntField(label_numGroupedAnimationFrames, prefs.numGroupedAnimationFrames);
-		prefs.numGroupedAnimationFrames = Mathf.Max(newNumGroupedAnimationFrames, 30); // sanity check
+		prefs.displayEditSpriteButton = EditorGUILayout.Toggle(label_displayEditButton, prefs.displayEditSpriteButton);
 
 		prefs.autoRebuild = EditorGUILayout.Toggle(label_autoRebuild, prefs.autoRebuild);
 		
 		prefs.showIds = EditorGUILayout.Toggle(label_showIds, prefs.showIds);
 
+		prefs.gridType = (tk2dGrid.Type)EditorGUILayout.EnumPopup("Grid Type", prefs.gridType);
+		if (prefs.gridType == tk2dGrid.Type.Custom) {
+			EditorGUI.indentLevel++;
+			prefs.customGridColor0 = EditorGUILayout.ColorField("Color 0", prefs.customGridColor0);
+			prefs.customGridColor1 = EditorGUILayout.ColorField("Color 1", prefs.customGridColor1);
+			EditorGUI.indentLevel--;
+		}
+
+		GUILayout.BeginHorizontal();
+		EditorGUILayout.PrefixLabel(" ");
+		Rect r = GUILayoutUtility.GetRect(64, 64);
+		GUILayout.FlexibleSpace();
+		tk2dGrid.Draw(r);
+		GUILayout.EndHorizontal();
+
 		if (GUILayout.Button("Reset Editor Sizes"))
 		{
-			prefs.spriteCollectionListWidth = tk2dPreferences.default_listWidth;
-			prefs.spriteCollectionInspectorWidth = tk2dPreferences.default_InspectorWidth;
-			prefs.animListWidth = tk2dPreferences.default_listWidth;
-			prefs.animInspectorWidth = tk2dPreferences.default_InspectorWidth;
-			prefs.animFrameWidth = -1;
+			prefs.spriteCollectionListWidth = tk2dPreferences.Defaults.spriteCollectionListWidth;
+			prefs.spriteCollectionInspectorWidth = tk2dPreferences.Defaults.spriteCollectionInspectorWidth;
+			prefs.animListWidth = tk2dPreferences.Defaults.animListWidth;
+			prefs.animInspectorWidth = tk2dPreferences.Defaults.animInspectorWidth;
+			prefs.animFrameWidth = tk2dPreferences.Defaults.animFrameWidth;
+			GUI.changed = true;
 		}
 
 		if (tk2dSystem.inst_NoCreate != null)
@@ -169,6 +206,8 @@ public class tk2dPreferencesEditor : EditorWindow
 			if (newPlatform != prefs.platform)
 			{
 				prefs.platform = newPlatform;
+				tk2dSystem.CurrentPlatform = prefs.platform; // mirror to where it matters
+				tk2dSystemUtility.PlatformChanged(); // tell the editor things have changed
 				tk2dEditorUtility.UnloadUnusedAssets();
 			}
 		}
@@ -176,5 +215,10 @@ public class tk2dPreferencesEditor : EditorWindow
 #if (UNITY_3_0 || UNITY_3_1 || UNITY_3_2 || UNITY_3_3 || UNITY_3_4)
 		prefs.isProSkin = EditorGUILayout.Toggle(label_proSkin, prefs.isProSkin);
 #endif
+		GUILayout.EndScrollView();
+
+		if (GUI.changed) {
+			tk2dPreferences.inst.Save();
+		}
 	}
 }

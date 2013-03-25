@@ -14,6 +14,8 @@ namespace tk2dEditor.SpriteAnimationEditor
 			set { SetClip(value); }
 		}
 
+		public EditorWindow hostEditorWindow = null;
+
 		public void InitForNewClip() { selectClipNameField = true; timelineEditor.CurrentState.selectedFrame = 0; }
 		bool selectClipNameField = false;
 
@@ -32,7 +34,40 @@ namespace tk2dEditor.SpriteAnimationEditor
 		void OnClipNameChanged() { if (clipNameChangedEvent != null) clipNameChangedEvent(clip, 0); }
 		void OnClipDeleted() { if (clipDeletedEvent != null) clipDeletedEvent(clip, 0); }
 		bool OnClipSelectionChanged(int direction) { if (clipSelectionChangedEvent != null) clipSelectionChangedEvent(clip, direction); return clipSelectionChangedEvent != null; }
-		void Repaint() { HandleUtility.Repaint(); }
+		void Repaint() { 
+			if (hostEditorWindow != null) {
+				hostEditorWindow.Repaint();
+			}
+			else {
+				HandleUtility.Repaint();
+			}
+		}
+
+		// Sprite changed callback
+		// Create an instance - only ever use the instance through the property
+		void SpriteChangedCallbackImpl(tk2dSpriteCollectionData spriteCollection, int spriteId, object data) {
+			FrameGroup fg = data as FrameGroup;
+			// Ensure the user hasn't switched sprite collection
+			if (fg != null && frameGroups.IndexOf(fg) != -1) {
+				fg.spriteCollection = spriteCollection;
+				fg.spriteId = spriteId;
+				foreach (tk2dSpriteAnimationFrame frame in fg.frames) {
+					frame.spriteCollection = spriteCollection;
+					frame.spriteId = spriteId;
+				}
+				RecalculateFrames();
+				Repaint();
+			}
+		}
+		tk2dSpriteGuiUtility.SpriteChangedCallback _spriteChangedCallbackInstance = null;
+		tk2dSpriteGuiUtility.SpriteChangedCallback spriteChangedCallbackInstance {
+			get {
+				if (_spriteChangedCallbackInstance == null) {
+					_spriteChangedCallbackInstance = new tk2dSpriteGuiUtility.SpriteChangedCallback( SpriteChangedCallbackImpl );
+				}
+				return _spriteChangedCallbackInstance;
+			}
+		}
 
 		// Editor operations
 		public tk2dEditor.SpriteAnimationEditor.AnimOperator[] animOps = new tk2dEditor.SpriteAnimationEditor.AnimOperator[0];
@@ -272,27 +307,7 @@ namespace tk2dEditor.SpriteAnimationEditor
 			GUILayout.Label("Frame", EditorStyles.largeLabel, GUILayout.ExpandWidth(true));
 
 			FrameGroup fg = frameGroups[timelineEditor.CurrentState.selectedFrame];
-			bool spriteChanged = false;
-
-			tk2dSpriteCollectionData newCollection = tk2dSpriteGuiUtility.SpriteCollectionPopup("Collection", fg.spriteCollection, true, fg.spriteId);
-			if (newCollection != fg.spriteCollection)
-			{
-				fg.spriteCollection = newCollection;
-				if (fg.spriteId < 0 || fg.spriteId >= fg.spriteCollection.Count 
-					|| !fg.spriteCollection.inst.spriteDefinitions[fg.spriteId].Valid)
-					fg.spriteId = fg.spriteCollection.FirstValidDefinitionIndex;
-				spriteChanged = true;
-			}
-
-			if (fg.spriteCollection != null)
-			{
-				int spriteId = tk2dSpriteGuiUtility.SpriteSelectorPopup("Sprite", fg.spriteId, fg.spriteCollection);
-				if (spriteId != fg.spriteId)
-				{
-					fg.spriteId = spriteId;
-					spriteChanged = true;
-				}
-			}
+			tk2dSpriteGuiUtility.SpriteSelector( fg.spriteCollection, fg.spriteId, spriteChangedCallbackInstance, fg );
 
 			int numFrames = EditorGUILayout.IntField("Frames", fg.frames.Count);
 			if (numFrames != fg.frames.Count && numFrames > 0)
@@ -313,16 +328,6 @@ namespace tk2dEditor.SpriteAnimationEditor
 				{
 					RecalculateFrames();
 					Repaint();
-				}
-			}
-
-			if (spriteChanged)
-			{
-				foreach (tk2dSpriteAnimationFrame frame in fg.frames)
-				{
-					frame.spriteCollection = fg.spriteCollection;
-					frame.spriteId = fg.spriteId;
-					RecalculateFrames();
 				}
 			}
 
@@ -426,7 +431,7 @@ namespace tk2dEditor.SpriteAnimationEditor
 
 			GUILayout.FlexibleSpace();
 
-			preview.GridType = (tk2dSpriteAnimationPreview.GridTypes)EditorGUILayout.EnumPopup(preview.GridType, EditorStyles.toolbarDropDown, GUILayout.Width(95));
+			tk2dPreferences.inst.gridType = (tk2dGrid.Type)EditorGUILayout.EnumPopup(tk2dPreferences.inst.gridType, EditorStyles.toolbarDropDown, GUILayout.Width(95));
 			GUILayout.EndHorizontal();
 		}
 

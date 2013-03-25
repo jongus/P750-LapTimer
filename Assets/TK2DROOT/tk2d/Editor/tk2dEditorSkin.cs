@@ -22,6 +22,7 @@ public class tk2dEditorSkin
 	static GUIStyle anim_trigger;
 	static GUIStyle anim_triggerSelected;
 	static GUIStyle whiteBox;
+	static GUIStyle selection;
 	
 	static string FindAsset(string name)
 	{
@@ -94,6 +95,7 @@ public class tk2dEditorSkin
 				anim_triggerSelected = skin.FindStyle("Anim_TriggerSelected");
 
 				whiteBox = skin.FindStyle("WhiteBox");
+				selection = skin.FindStyle("Selection");
 			}
 		}
 	}
@@ -115,4 +117,5 @@ public class tk2dEditorSkin
 	public static GUIStyle Anim_TriggerSelected { get { Init(); return anim_triggerSelected; } }
 	
 	public static GUIStyle WhiteBox { get { Init(); return whiteBox; } }
+	public static GUIStyle Selection { get { Init(); return selection; } }
 }

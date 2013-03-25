@@ -350,7 +350,7 @@ namespace tk2dEditor.SpriteCollectionEditor
 		{
 			for (int index = 0; index < textureParams.Count; ++index)
 			{
-				if (textureParams[index].texture == null)
+				if (textureParams[index].texture == null && textureParams[index].name.Length == 0)
 					return index;
 			}
 			textureParams.Add(new tk2dSpriteCollectionDefinition());
@@ -419,7 +419,7 @@ namespace tk2dEditor.SpriteCollectionEditor
 			int lastIndex = textureParams.Count - 1;
 			while (lastIndex >= 0)
 			{
-				if (textureParams[lastIndex].texture != null)
+				if (textureParams[lastIndex].texture != null || textureParams[lastIndex].name.Length > 0)
 					break;
 				lastIndex--;
 			}

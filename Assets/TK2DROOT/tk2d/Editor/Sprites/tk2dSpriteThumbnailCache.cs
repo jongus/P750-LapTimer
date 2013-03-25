@@ -29,6 +29,30 @@ public class tk2dSpriteThumbnailCache
 		DrawSpriteTexture(rect, def, Color.white);		
 	}
 
+	// Draws the sprite texture in the rect given
+	// Will center the sprite in the rect, regardless of anchor set-up
+	public void DrawSpriteTextureInRect(Rect rect, tk2dSpriteDefinition def, Color tint) {
+		if (Event.current.type == EventType.Repaint) {
+			float sw = def.untrimmedBoundsData[1].x;
+			float sh = def.untrimmedBoundsData[1].y;
+			float s_epsilon = 0.00001f;
+			float tileSize = Mathf.Min(rect.width, rect.height);
+			Rect spriteRect = rect;
+			if (sw > s_epsilon && sh > s_epsilon)
+			{
+				// rescale retaining aspect ratio
+				if (sw > sh)
+					spriteRect = new Rect(rect.x, rect.y, tileSize, tileSize * sh / sw);
+				else
+					spriteRect = new Rect(rect.x, rect.y, tileSize * sw / sh, tileSize);
+				spriteRect.x = rect.x + (tileSize - spriteRect.width) / 2;
+				spriteRect.y = rect.y + (tileSize - spriteRect.height) / 2;
+			}
+
+			DrawSpriteTexture(spriteRect, def, tint);
+		}
+	}
+
 	public void DrawSpriteTexture(Rect rect, tk2dSpriteDefinition def, Color tint)
 	{
 		Vector2 pixelSize = new Vector3( rect.width / def.untrimmedBoundsData[1].x, rect.height / def.untrimmedBoundsData[1].y);

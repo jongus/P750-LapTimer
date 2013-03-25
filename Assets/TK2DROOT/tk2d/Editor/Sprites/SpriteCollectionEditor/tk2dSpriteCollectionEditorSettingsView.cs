@@ -271,6 +271,7 @@ namespace tk2dEditor.SpriteCollectionEditor
 				{
 					SpriteCollection.altMaterials = new Material[0];
 					SpriteCollection.atlasMaterials = new Material[0];
+					SpriteCollection.atlasTextures = new Texture2D[0];
 					SpriteCollection.spriteCollection = null;
 					foreach (tk2dSpriteCollectionPlatform plat in SpriteCollection.platforms)
 						plat.spriteCollection = null;

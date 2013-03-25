@@ -155,7 +155,7 @@ public class tk2dStaticSpriteBatcher : MonoBehaviour, tk2dRuntime.ISpriteCollect
 			}
 			
 			var spriteData = spriteCollectionInst.spriteDefinitions[sprite.spriteId];
-			if (spriteData.material.renderQueue == 2000)
+			if (spriteData.materialInst.renderQueue == 2000)
 				solidBatches.Add(sprite);
 			else
 				otherBatches.Add(sprite);
@@ -225,7 +225,7 @@ public class tk2dStaticSpriteBatcher : MonoBehaviour, tk2dRuntime.ISpriteCollect
 			
 			var spriteData = spriteCollectionInst.spriteDefinitions[sprite.spriteId];
 			
-			if (spriteData.material != currentMaterial)
+			if (spriteData.materialInst != currentMaterial)
 			{
 				if (currentMaterial != null)
 				{
@@ -233,7 +233,7 @@ public class tk2dStaticSpriteBatcher : MonoBehaviour, tk2dRuntime.ISpriteCollect
 					indices.Add(currentIndices);
 				}
 				
-				currentMaterial = spriteData.material;
+				currentMaterial = spriteData.materialInst;
 				currentIndices = new List<int>();
 			}
 			

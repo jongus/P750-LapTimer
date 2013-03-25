@@ -96,6 +96,8 @@ namespace tk2dEditor.SpriteCollectionBuilder
 			proxy.atlasWidth = (int)(proxy.atlasWidth * scale);
 			proxy.atlasHeight = (int)(proxy.atlasHeight * scale);
 			proxy.maxTextureSize = (int)(proxy.maxTextureSize * scale);
+			proxy.forcedTextureWidth = (int)(proxy.forcedTextureWidth * scale);
+			proxy.forcedTextureHeight = (int)(proxy.forcedTextureHeight * scale);
 
 			if (!proxy.useTk2dCamera)
 				proxy.targetOrthoSize *= 1.0f;

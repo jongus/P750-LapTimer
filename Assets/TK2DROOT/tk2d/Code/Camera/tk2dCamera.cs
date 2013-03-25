@@ -77,6 +77,8 @@ public class tk2dCamera : MonoBehaviour
 	/// </summary>
 	public tk2dCameraResolutionOverride[] resolutionOverride = null;
 	tk2dCameraResolutionOverride currentResolutionOverride = null;
+
+	public tk2dCamera inheritSettings = null;
 	
 	/// <summary>
 	/// Native resolution width of the camera. Override this in the inspector.
@@ -125,6 +127,24 @@ public class tk2dCamera : MonoBehaviour
 	[System.Obsolete]
 	public Vector2 resolution { get { return ScaledResolution; } }
 
+
+	/// <summary>
+	/// Enable/disable viewport clipping.
+	/// ScreenCamera must be valid for it to be actually enabled when rendering.
+	/// </summary>
+	public bool viewportClippingEnabled = false;
+
+	/// <summary>
+	/// Viewport clipping region.
+	/// </summary>
+	public Vector4 viewportRegion = new Vector4(0, 0, 100, 100);
+
+	/// <summary>
+	/// Camera for viewportClipping
+	/// </summary>
+	public Camera screenCamera = null;
+
+
 	/// <summary>
 	/// Target resolution
 	/// The target resolution currently being used.
@@ -164,12 +184,12 @@ public class tk2dCamera : MonoBehaviour
 	void Awake () 
 	{
 		mainCamera = GetComponent<Camera>();
-		if (mainCamera != null)
-		{
+		if (mainCamera != null) {
 			UpdateCameraMatrix();
 		}
 		
-		inst = this;
+		if (!viewportClippingEnabled) // the main camera can't display rect
+			inst = this;
 	}
 	
 	void LateUpdate() 
@@ -179,12 +199,24 @@ public class tk2dCamera : MonoBehaviour
 
 	Rect _screenExtents;
 
+	Rect unitRect = new Rect(0, 0, 1, 1);
+	
+	public Vector2 dumbOffset = Vector2.zero;
+
+	// Trace back to the source, however far up the hierarchy that may be
+	tk2dCamera Settings {
+		get { 
+			return (inheritSettings == null || inheritSettings == this) ? this : inheritSettings.Settings;
+		}
+	}
+	
 	/// <summary>
 	/// Updates the camera matrix to ensure 1:1 pixel mapping
 	/// </summary>
 	public void UpdateCameraMatrix()
 	{
-		inst = this;
+		if (!this.viewportClippingEnabled)
+			inst = this;
 
 		if (!mainCamera.orthographic)
 		{
@@ -192,34 +224,39 @@ public class tk2dCamera : MonoBehaviour
 			Debug.LogError("tk2dCamera must be orthographic");
 			mainCamera.orthographic = true;
 		}
-		
-		float pixelWidth = mainCamera.pixelWidth;
-		float pixelHeight = mainCamera.pixelHeight;
+
+		tk2dCamera settings = Settings;
+
+		bool viewportClippingEnabled = this.viewportClippingEnabled && this.screenCamera != null && this.screenCamera.rect == unitRect;
+		Camera screenCamera = viewportClippingEnabled ? this.screenCamera : mainCamera;
+
+		float pixelWidth = screenCamera.pixelWidth;
+		float pixelHeight = screenCamera.pixelHeight;
 
 #if UNITY_EDITOR
-		if (forceResolutionInEditor)
+		if (settings.forceResolutionInEditor)
 		{
-			pixelWidth = forceResolution.x;
-			pixelHeight = forceResolution.y;
+			pixelWidth = settings.forceResolution.x;
+			pixelHeight = settings.forceResolution.y;
 		}
 #endif
-	
+
 		_targetResolution = new Vector2(pixelWidth, pixelHeight);
 		
 		// Find an override if necessary
-		if (!enableResolutionOverrides)
+		if (!settings.enableResolutionOverrides)
 			currentResolutionOverride = null;
 		
-		if (enableResolutionOverrides && 
+		if (settings.enableResolutionOverrides && 
 			(currentResolutionOverride == null ||
 			(currentResolutionOverride != null && (currentResolutionOverride.width != pixelWidth || currentResolutionOverride.height != pixelHeight))
 			))
 		{
 			currentResolutionOverride = null;
 			// find one if it matches the current resolution
-			if (resolutionOverride != null)
+			if (settings.resolutionOverride != null)
 			{
-				foreach (var ovr in resolutionOverride)
+				foreach (var ovr in settings.resolutionOverride)
 				{
 					if (ovr.Match((int)pixelWidth, (int)pixelHeight))
 					{
@@ -238,23 +275,23 @@ public class tk2dCamera : MonoBehaviour
 			switch (currentResolutionOverride.autoScaleMode)
 			{
 			case tk2dCameraResolutionOverride.AutoScaleMode.FitHeight: 
-				s = pixelHeight / nativeResolutionHeight; 
+				s = pixelHeight / settings.nativeResolutionHeight; 
 				scale.Set(s, s);
 				break;
 
 			case tk2dCameraResolutionOverride.AutoScaleMode.FitWidth: 
-				s = pixelWidth / nativeResolutionWidth; 
+				s = pixelWidth / settings.nativeResolutionWidth; 
 				scale.Set(s, s);
 				break;
 
 			case tk2dCameraResolutionOverride.AutoScaleMode.FitVisible:
 			case tk2dCameraResolutionOverride.AutoScaleMode.PixelPerfectFit:
-				float nativeAspect = (float)nativeResolutionWidth / nativeResolutionHeight;
+				float nativeAspect = (float)settings.nativeResolutionWidth / settings.nativeResolutionHeight;
 				float currentAspect = pixelWidth / pixelHeight;
 				if (currentAspect < nativeAspect)
-					s = pixelWidth / nativeResolutionWidth;
+					s = pixelWidth / settings.nativeResolutionWidth;
 				else
-					s = pixelHeight / nativeResolutionHeight;
+					s = pixelHeight / settings.nativeResolutionHeight;
 				
 				if (currentResolutionOverride.autoScaleMode == tk2dCameraResolutionOverride.AutoScaleMode.PixelPerfectFit)
 				{
@@ -268,7 +305,7 @@ public class tk2dCamera : MonoBehaviour
 				break;
 
 			case tk2dCameraResolutionOverride.AutoScaleMode.StretchToFit:
-				scale.Set(pixelWidth / nativeResolutionWidth, pixelHeight / nativeResolutionHeight);
+				scale.Set(pixelWidth / settings.nativeResolutionWidth, pixelHeight / settings.nativeResolutionHeight);
 				break;
 
 			default:
@@ -286,8 +323,8 @@ public class tk2dCamera : MonoBehaviour
 				switch (currentResolutionOverride.fitMode)
 				{
 				case tk2dCameraResolutionOverride.FitMode.Center:
-					offset = new Vector2(Mathf.Round((nativeResolutionWidth  * scale.x - pixelWidth ) / 2.0f), 
-										 Mathf.Round((nativeResolutionHeight * scale.y - pixelHeight) / 2.0f));
+					offset = new Vector2(Mathf.Round((settings.nativeResolutionWidth  * scale.x - pixelWidth ) / 2.0f), 
+										 Mathf.Round((settings.nativeResolutionHeight * scale.y - pixelHeight) / 2.0f));
 					break;
 					
 				default:
@@ -299,14 +336,60 @@ public class tk2dCamera : MonoBehaviour
 		
 		float left = offset.x, bottom = offset.y;
 		float right = pixelWidth + offset.x, top = pixelHeight + offset.y;
-		_screenExtents.Set(left / scale.x, top / scale.y, (right - left) / scale.x, (bottom - top) / scale.y);
 
+		// Correct for viewport clipping rendering
+		// Coordinates in subrect are "native" pixels, but origin is from the extrema of screen
+		if (viewportClippingEnabled) {
+			float vw = (right - left) / scale.x;
+			float vh = (top - bottom) / scale.y;
+
+			Vector4 sr = new Vector4((int)viewportRegion.x, (int)viewportRegion.y,
+									 (int)viewportRegion.z, (int)viewportRegion.w);
+
+			float viewportLeft = -offset.x / pixelWidth + sr.x / vw;
+			float viewportBottom = -offset.y / pixelHeight + sr.y / vh;
+			float viewportWidth = sr.z / vw;
+			float viewportHeight = sr.w / vh;
+
+			Rect r = new Rect( viewportLeft, viewportBottom, viewportWidth, viewportHeight );
+			if (mainCamera.rect.x != viewportLeft ||
+				mainCamera.rect.y != viewportBottom ||
+				mainCamera.rect.width != viewportWidth ||
+				mainCamera.rect.height != viewportHeight) {
+				mainCamera.rect = r;
+			}
+
+			float maxWidth = Mathf.Min( 1.0f - r.x, r.width );
+			float maxHeight = Mathf.Min( 1.0f - r.y, r.height );
+
+			float rectOffsetX = sr.x * scale.x - offset.x;
+			float rectOffsetY = sr.y * scale.y - offset.y;
+
+			if (r.x < 0.0f) {
+				rectOffsetX += -r.x * pixelWidth;
+				maxWidth = (r.x + r.width);
+			}
+			if (r.y < 0.0f) {
+				rectOffsetY += -r.y * pixelHeight;
+				maxHeight = (r.y + r.height);
+			}
+
+			left += rectOffsetX;
+			bottom += rectOffsetY;
+			right = pixelWidth * maxWidth + offset.x + rectOffsetX;
+			top = pixelHeight * maxHeight + offset.y +  rectOffsetY;
+		}
+		else {
+			mainCamera.rect = new Rect(0, 0, 1, 1);
+		}
+
+		_screenExtents.Set(left / scale.x, top / scale.y, (right - left) / scale.x, (bottom - top) / scale.y);
 		float far = mainCamera.farClipPlane;
 		float near = mainCamera.near;
 		
 		// set up externally used variables
 		orthoSize = (top - bottom) / 2.0f;
-		_scaledResolution = new Vector2(right / scale.x, top / scale.y);
+		_scaledResolution = new Vector2((right - left) / scale.x, (top - bottom) / scale.y);
 		_screenOffset = offset;
 		
 		// Additional half texel offset

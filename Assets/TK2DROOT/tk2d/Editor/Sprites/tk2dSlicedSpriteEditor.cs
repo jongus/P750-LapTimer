@@ -126,8 +126,7 @@ class tk2dSlicedSpriteEditor : tk2dSpriteEditor
 		GameObject go = tk2dEditorUtility.CreateGameObjectInScene("Sliced Sprite");
 		tk2dSlicedSprite sprite = go.AddComponent<tk2dSlicedSprite>();
 		sprite.legacyMode = false;
-		sprite.Collection = sprColl;
-		sprite.renderer.material = sprColl.FirstValidDefinition.material;
+		sprite.SwitchCollectionAndSprite(sprColl, sprColl.FirstValidDefinitionIndex);
 		sprite.Build();
 		Selection.activeGameObject = go;
 		Undo.RegisterCreatedObjectUndo(go, "Create Sliced Sprite");

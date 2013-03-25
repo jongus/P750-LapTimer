@@ -365,9 +365,13 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 		if (meshColors == null || meshColors.Length == 0)
 			return;
 #endif
-		
-		SetColors(meshColors);
-		mesh.colors = meshColors;
+		if (meshColors == null || meshColors.Length == 0) {
+			Build();
+		}
+		else {
+			SetColors(meshColors);
+			mesh.colors = meshColors;
+		}
 	}
 
 	protected void UpdateGeometryImpl()
@@ -377,12 +381,17 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 		if (mesh == null)
 			return;
 #endif
-		SetGeometry(meshVertices, meshUvs);
-		mesh.vertices = meshVertices;
-		mesh.uv = meshUvs;
-		mesh.RecalculateBounds();
-		
-		UpdateCollider();
+		if (meshVertices == null || meshVertices.Length == 0) {
+			Build();
+		}
+		else {
+			SetGeometry(meshVertices, meshUvs);
+			mesh.vertices = meshVertices;
+			mesh.uv = meshUvs;
+			mesh.RecalculateBounds();
+			
+			UpdateCollider();
+		}
 	}
 	
 	new void UpdateCollider()

@@ -110,6 +110,15 @@ public class tk2dSprite : tk2dBaseSprite
 	}
 	
 	/// <summary>
+	/// Adds a tk2dSprite as a component to the gameObject passed in, setting up necessary parameters and building geometry.
+	/// Convenience alias of tk2dBaseSprite.AddComponent<tk2dSprite>(...).
+	/// </summary>
+	public static tk2dSprite AddComponent(GameObject go, tk2dSpriteCollectionData spriteCollection, string spriteName)
+	{
+		return tk2dBaseSprite.AddComponent<tk2dSprite>(go, spriteCollection, spriteName);
+	}
+	
+	/// <summary>
 	/// Create a sprite (and gameObject) displaying the region of the texture specified.
 	/// Use <see cref="tk2dSpriteCollectionData.CreateFromTexture"/> if you need to create a sprite collection
 	/// with multiple sprites.
