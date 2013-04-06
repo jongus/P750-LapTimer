@@ -13,6 +13,7 @@ public class scriptMain : MonoBehaviour {
 	private double[] adAvgSpeed;
 	private int iAvgSpeedIdx = 0;	
 	private double dLastTimestamp = 0.0d;
+	private double dBearing = 0.0d;
 	
 	private Color cRed = new Color(1.000000000f,0.266666667f,0.180392157f, 1.0f);
 	private Color cBlue = new Color(0.243137255f,0.745098039f,1.000000000f, 1.0f);
@@ -84,6 +85,12 @@ public class scriptMain : MonoBehaviour {
 		ResetGUI();
 		
 	}
+	
+	void OnApplicationQuit() {
+        Input.location.Stop ();
+		
+		//PlayerPrefs.Save();
+    }
 	
 	void DebugLog(string sMsg) {
 		fwDebug.WriteLine (sMsg);
@@ -159,6 +166,9 @@ public class scriptMain : MonoBehaviour {
 		
 		if(iWaitForGPS  >= 4) {
 			//Not the first run
+			//Start by calulating the bearing
+			dBearing = CalculateBearingTo(dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude );
+			
 			//Okey, try to calculate speed
 			double dDist = CalculateDistanceBetweenGPSCoordinates (dLastLon, dLastLat, (double)liTmp.longitude , (double)liTmp.latitude );
 			dAccDist += dDist;
@@ -268,6 +278,8 @@ public class scriptMain : MonoBehaviour {
 				tmCurSpeed.Commit();
 				tmGPS.text = Input.location.lastData.horizontalAccuracy.ToString ("#0") + " m";
 				tmGPS.Commit ();
+				tmBigInfo.text = dBearing.ToString("#0");
+				tmBigInfo.Commit();
 				
 			} else if((dNowInEpoch() - Input.location.lastData.timestamp) > 3.0d) {
 				//We are not moving?? Handle speed in a nice way, not a real error!
@@ -315,7 +327,7 @@ public class scriptMain : MonoBehaviour {
 		
 	}
 	
-	public static double CalculateDistanceBetweenGPSCoordinates(double lon1, double lat1, double lon2, double lat2) {
+	public double CalculateDistanceBetweenGPSCoordinates(double lon1, double lat1, double lon2, double lat2) {
 		//Returns in meters
 	    const double R = 6378137; 
 	    const double degreesToRadians = Math.PI / 180.0d; 
@@ -333,6 +345,24 @@ public class scriptMain : MonoBehaviour {
 	    double d = R * c; 
 	
 	    return d; 
+	}
+	
+	public double CalculateBearingTo(double lon1, double lat1, double lon2, double lat2) {
+		//BearingTo(double lat, double lng)
+		const double degreesToRadians = Math.PI / 180.0d;
+		const double RadiansToDegrees = 180.0d / Math.PI;
+		
+		//convert from fractional degrees (GPS) to radians 
+	    lon1 *= degreesToRadians; 
+	    lat1 *= degreesToRadians; 
+	    lon2 *= degreesToRadians; 
+	    lat2 *= degreesToRadians;
+	    
+		double dLon = lon1 - lon2;
+	    double y = Math.Sin(dLon) * Math.Cos(lat1);
+	    double x = Math.Cos(lat2) * Math.Sin(lat1) - Math.Sin(lat2) * Math.Cos(lat1) * Math.Cos(dLon);
+	    double brng = Math.Atan2(y, x);
+	    return ((brng * RadiansToDegrees) + 360) % 360;
 	}
 	
 }
