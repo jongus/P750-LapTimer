@@ -358,9 +358,9 @@ public class scriptMain : MonoBehaviour {
 	    lon2 *= degreesToRadians; 
 	    lat2 *= degreesToRadians;
 	    
-		double dLon = lon1 - lon2;
-	    double y = Math.Sin(dLon) * Math.Cos(lat1);
-	    double x = Math.Cos(lat2) * Math.Sin(lat1) - Math.Sin(lat2) * Math.Cos(lat1) * Math.Cos(dLon);
+		double dLon = lon2 - lon1;
+	    double y = Math.Sin(dLon) * Math.Cos(lat2);
+	    double x = Math.Cos(lat1) * Math.Sin(lat2) - Math.Sin(lat1) * Math.Cos(lat2) * Math.Cos(dLon);
 	    double brng = Math.Atan2(y, x);
 	    return ((brng * RadiansToDegrees) + 360) % 360;
 	}

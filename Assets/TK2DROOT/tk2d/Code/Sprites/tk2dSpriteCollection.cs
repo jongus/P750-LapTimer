@@ -61,6 +61,7 @@ public class tk2dSpriteCollectionDefinition
 		Default,
 		BlackZeroAlpha,
 		Extend,
+		TileXY,
 	}
 	
 	public enum ColliderType

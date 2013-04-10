@@ -36,7 +36,7 @@ public class tk2dGrid {
 			inst = new tk2dGrid();
 			inst.InitTexture();
 		}
-		GUI.DrawTextureWithTexCoords(rect, inst.gridTexture, new Rect(-offset.x / textureSize, offset.y / textureSize, rect.width / textureSize, rect.height / textureSize), false);
+		GUI.DrawTextureWithTexCoords(rect, inst.gridTexture, new Rect(-offset.x / textureSize, (offset.y - rect.height) / textureSize, rect.width / textureSize, rect.height / textureSize), false);
 	} 
 
 	Texture2D gridTexture = null;

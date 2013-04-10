@@ -487,6 +487,9 @@ namespace tk2dEditor.SpriteCollectionEditor
 			
 			GUILayout.BeginVertical(tk2dEditorSkin.SC_BodyBackground, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
 			GUILayout.EndVertical();
+
+			Rect rect = GUILayoutUtility.GetLastRect();
+			tk2dGrid.Draw(rect);
 			
 			
 			int inspectorWidth = host.InspectorWidth;

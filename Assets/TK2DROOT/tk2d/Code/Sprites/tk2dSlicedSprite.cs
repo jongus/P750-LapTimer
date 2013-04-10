@@ -11,50 +11,43 @@ using System.Collections;
 /// </summary>
 public class tk2dSlicedSprite : tk2dBaseSprite
 {
-	/// <summary>
-	/// Anchor.
-	/// NOTE: The order in this enum is deliberate, to initialize at LowerLeft for backwards compatibility.
-	/// This is also the reason it is local here. Other Anchor enums are NOT compatbile. Do not cast.
-	/// </summary>
-    public enum Anchor
-    {
-		/// <summary>Lower left</summary>
-		LowerLeft,
-		/// <summary>Lower center</summary>
-		LowerCenter,
-		/// <summary>Lower right</summary>
-		LowerRight,
-		/// <summary>Middle left</summary>
-		MiddleLeft,
-		/// <summary>Middle center</summary>
-		MiddleCenter,
-		/// <summary>Middle right</summary>
-		MiddleRight,
-		/// <summary>Upper left</summary>
-		UpperLeft,
-		/// <summary>Upper center</summary>
-		UpperCenter,
-		/// <summary>Upper right</summary>
-		UpperRight,
-    }
-	
 	Mesh mesh;
 	Vector2[] meshUvs;
 	Vector3[] meshVertices;
-	Color[] meshColors;
+	Color32[] meshColors;
 	int[] meshIndices;
 	
 	[SerializeField]
 	Vector2 _dimensions = new Vector2(50.0f, 50.0f);
 	[SerializeField]
 	Anchor _anchor = Anchor.LowerLeft;
+	[SerializeField]
+	bool _borderOnly = false;
 	
 	/// <summary>
 	/// Legacy mode (uses scale to adjust overall size).
 	/// Newly created sprites should have this set to false.
 	/// </summary>
 	public bool legacyMode = true;
-	
+
+	/// <summary>
+	/// Gets or sets border only. When true, the quad in the middle of the
+	/// sliced sprite is omitted, thus only drawing a border and saving fillrate
+	/// </summary>
+	public bool BorderOnly
+	{ 
+		get { return _borderOnly; } 
+		set
+		{
+			if (value != _borderOnly)
+			{
+				_borderOnly = value;
+				UpdateIndices();
+			}
+		}
+	}
+
+
 	/// <summary>
 	/// Gets or sets the dimensions.
 	/// </summary>
@@ -70,14 +63,14 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 			{
 				_dimensions = value;
 				UpdateVertices();
-#if UNITY_EDITOR
-				EditMode__CreateCollider();
-#endif
 				UpdateCollider();
 			}
 		}
 	}
 	
+	/// <summary>
+	/// The anchor position for this sliced sprite
+	/// </summary>
 	public Anchor anchor
 	{
 		get { return _anchor; }
@@ -87,9 +80,6 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 			{
 				_anchor = value;
 				UpdateVertices();
-#if UNITY_EDITOR
-				EditMode__CreateCollider();
-#endif
 				UpdateCollider();
 			}
 		}
@@ -111,10 +101,24 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 	/// Right border in sprite fraction (1 - Right, 0 - Left)
 	/// </summary>
 	public float borderRight = 0.2f;
-	/// <summary>
-	/// The anchor position for this sliced sprite
-	/// </summary>
 	
+
+	[SerializeField]
+	protected bool _createBoxCollider = false;
+
+	/// <summary>
+	/// Create a trimmed box collider for this sprite
+	/// </summary>
+	public bool CreateBoxCollider {
+		get { return _createBoxCollider; }
+		set {
+			if (_createBoxCollider != value) {
+				_createBoxCollider = value;
+				UpdateCollider();
+			}
+		}
+	}
+
 	new void Awake()
 	{
 		base.Awake();
@@ -123,7 +127,12 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 		mesh = new Mesh();
 		mesh.hideFlags = HideFlags.DontSave;
 		GetComponent<MeshFilter>().mesh = mesh;
-		
+	
+		// Cache box collider		
+		if (boxCollider == null) {
+			boxCollider = GetComponent<BoxCollider>();
+		}
+
 		// This will not be set when instantiating in code
 		// In that case, Build will need to be called
 		if (Collection)
@@ -134,9 +143,6 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 				_spriteId = 0;
 			
 			Build();
-			
-			if (boxCollider == null)
-				boxCollider = GetComponent<BoxCollider>();
 		}
 	}
 	
@@ -152,12 +158,14 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 		}
 	}
 	
-	new protected void SetColors(Color[] dest)
+	new protected void SetColors(Color32[] dest)
 	{
 		Color c = _color;
         if (collectionInst.premultipliedAlpha) { c.r *= c.a; c.g *= c.a; c.b *= c.a; }
+        Color c32 = c;
+
 		for (int i = 0; i < dest.Length; ++i)
-			dest[i] = c;
+			dest[i] = c32;
 	}
 	
 	// Calculated center and extents
@@ -168,8 +176,6 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 		var sprite = collectionInst.spriteDefinitions[spriteId];
 		if (sprite.positions.Length == 4)
 		{
-			float colliderExtentZ = (sprite.colliderType == tk2dSpriteDefinition.ColliderType.Box)?(sprite.colliderVertices[1].z * _scale.z):0.1f;
-			
 			if (legacyMode)
 			{
 				// in legacy mode, scale is used to determine the total size of the sliced sprite
@@ -254,8 +260,10 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 				anchorOffsetX *= sx;
 				anchorOffsetY *= sy;
 				
-				boundsCenter = new Vector3(dimXPixels / 2.0f + anchorOffsetX, dimYPixels / 2.0f + anchorOffsetY, 0);
-				boundsExtents = new Vector3(dimXPixels / 2.0f, dimYPixels / 2.0f, colliderExtentZ);
+				float colliderOffsetZ = ( boxCollider != null ) ? ( boxCollider.center.z ) : 0.0f;
+				float colliderExtentZ = ( boxCollider != null ) ? ( boxCollider.size.z * 0.5f ) : 0.5f;
+				boundsCenter.Set(_scale.x * (dimXPixels * 0.5f + anchorOffsetX), _scale.y * (dimYPixels * 0.5f + anchorOffsetY), colliderOffsetZ);
+				boundsExtents.Set(_scale.x * (dimXPixels * 0.5f), _scale.y * (dimYPixels * 0.5f), colliderExtentZ);
 				
 				Vector2[] srcUv = sprite.uvs;
 				Vector2 duvx = sprite.uvs[1] - sprite.uvs[0];
@@ -284,13 +292,8 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 					meshVertices[i * 4 + 2] = originPoints[i] + new Vector3(dimXPixels - borderRightPixels, 0, 0);
 					meshVertices[i * 4 + 3] = originPoints[i] + new Vector3(dimXPixels, 0, 0);
 					
-					for (int j = 0; j < 4; ++j)
-					{
-						Vector3 v = meshVertices[i * 4 + j];
-						v.x = v.x * _scale.x;
-						v.y = v.y * _scale.y;
-						v.z = v.z * _scale.z;
-						meshVertices[i * 4 + j] = v;
+					for (int j = 0; j < 4; ++j) {
+						meshVertices[i * 4 + j] = Vector3.Scale(meshVertices[i * 4 + j], _scale);
 					}
 					
 					meshUvs[i * 4 + 0] = originUvs[i];
@@ -314,19 +317,24 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 			1, 5, 2, 2, 5, 6,
 			2, 6, 3, 3, 6, 7,
 			4, 8, 5, 5, 8, 9,
-			5, 9, 6, 6, 9, 10,
+			5, 9, 6, 6, 9, 10, // middle bit
 			6, 10, 7, 7, 10, 11,
 			8, 12, 9, 9, 12, 13,
 			9, 13, 10, 10, 13, 14,
 			10, 14, 11, 11, 14, 15
 		};		
+		if (_borderOnly) {
+			for (int i = 24; i < 30; ++i) {
+				meshIndices[i] = 0;
+			}			
+		}
 	}
 	
 	public override void Build()
 	{
 		meshUvs = new Vector2[16];
 		meshVertices = new Vector3[16];
-		meshColors = new Color[16];
+		meshColors = new Color32[16];
 		SetIndices();
 		
 		SetGeometry(meshVertices, meshUvs);
@@ -342,7 +350,7 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 			mesh.Clear();
 		}
 		mesh.vertices = meshVertices;
-		mesh.colors = meshColors;
+		mesh.colors32 = meshColors;
 		mesh.uv = meshUvs;
 		mesh.triangles = meshIndices;
 		mesh.RecalculateBounds();
@@ -356,7 +364,12 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 	protected override void UpdateGeometry() { UpdateGeometryImpl(); }
 	protected override void UpdateColors() { UpdateColorsImpl(); }
 	protected override void UpdateVertices() { UpdateGeometryImpl(); }
-	
+	void UpdateIndices() {
+		if (mesh != null) {
+			SetIndices();
+			mesh.triangles = meshIndices;
+		}
+	}
 	
 	protected void UpdateColorsImpl()
 	{
@@ -370,7 +383,7 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 		}
 		else {
 			SetColors(meshColors);
-			mesh.colors = meshColors;
+			mesh.colors32 = meshColors;
 		}
 	}
 
@@ -393,15 +406,43 @@ public class tk2dSlicedSprite : tk2dBaseSprite
 			UpdateCollider();
 		}
 	}
-	
-	new void UpdateCollider()
+
+#region Collider
+	protected override void UpdateCollider()
 	{
-		if (boxCollider)
-		{
-			boxCollider.center = boundsCenter;
+		if (CreateBoxCollider) {
+			if (boxCollider == null) {
+				boxCollider = GetComponent<BoxCollider>();
+				if (boxCollider == null) {
+					boxCollider = gameObject.AddComponent<BoxCollider>();
+				}
+			}
 			boxCollider.extents = boundsExtents;
+			boxCollider.center = boundsCenter;
+		} else {
+#if UNITY_EDITOR
+			boxCollider = GetComponent<BoxCollider>();
+			if (boxCollider != null) {
+				DestroyImmediate(boxCollider);
+			}
+#else
+			if (boxCollider != null) {
+				Destroy(boxCollider);
+			}
+#endif
 		}
 	}
+
+	protected override void CreateCollider() {
+		UpdateCollider();
+	}
+
+#if UNITY_EDITOR
+	public override void EditMode__CreateCollider() {
+		UpdateCollider();
+	}
+#endif
+#endregion
 	
 	protected override void UpdateMaterial()
 	{

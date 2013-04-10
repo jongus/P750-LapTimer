@@ -68,8 +68,7 @@ public static class tk2dSpriteGuiUtility
 
 		GUILayout.BeginHorizontal();
 		newCollection = SpriteCollectionList("Collection", spriteCollection);
-		if (tk2dPreferences.inst.displayEditSpriteButton &&
-			GUILayout.Button("o", EditorStyles.miniButton, GUILayout.Width(18))) {
+		if (GUILayout.Button("o", EditorStyles.miniButton, GUILayout.Width(18))) {
 			EditorGUIUtility.PingObject(spriteCollection);
 		}
 		GUILayout.EndHorizontal();
@@ -82,8 +81,7 @@ public static class tk2dSpriteGuiUtility
 			GUILayout.BeginHorizontal();
 			newSpriteId = SpriteList( "Sprite", newSpriteId, spriteCollection );
 
-			if ( tk2dPreferences.inst.displayEditSpriteButton &&
-				 spriteCollection != null && spriteCollection.dataGuid != TransientGUID && 
+			if ( spriteCollection != null && spriteCollection.dataGuid != TransientGUID && 
 				 GUILayout.Button( "e", EditorStyles.miniButton, GUILayout.Width(18), GUILayout.MaxHeight( 14f ) ) ) {
 				tk2dSpriteCollection gen = AssetDatabase.LoadAssetAtPath( AssetDatabase.GUIDToAssetPath(spriteCollection.spriteCollectionGUID), typeof(tk2dSpriteCollection) ) as tk2dSpriteCollection;
 				if ( gen != null ) 

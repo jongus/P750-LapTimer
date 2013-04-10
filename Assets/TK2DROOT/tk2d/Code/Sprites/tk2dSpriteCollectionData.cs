@@ -92,10 +92,16 @@ public class tk2dSpriteDefinition
 	public bool extractRegion;
 	public int regionX, regionY, regionW, regionH;
 	
+	public enum FlipMode {
+		None,
+		Tk2d,
+		TPackerCW,
+	}
+
 	/// <summary>
 	/// Specifies if this texture is flipped to its side (rotated) in the atlas
 	/// </summary>
-	public bool flipped;
+	public FlipMode flipped;
 	
 	/// <summary>
 	/// Specifies if this texture has complex geometry
@@ -407,12 +413,27 @@ public class tk2dSpriteCollectionData : MonoBehaviour
 		materialInsts = new Material[materials.Length];
 		if (needMaterialInstance)
 		{
-			for (int i = 0; i < materials.Length; ++i)
-			{
-				materialInsts[i] = Instantiate(materials[i]) as Material;
-#if UNITY_EDITOR
-				materialInsts[i].hideFlags = HideFlags.DontSave;
-#endif
+			if (tk2dSystem.OverrideBuildMaterial) {
+				// This is a hack to work around a bug in Unity 4.x
+				// Scene serialization will serialize the actively bound texture
+				// but not the material during the build, only when [ExecuteInEditMode]
+				// is on, eg. on sprites.
+				for (int i = 0; i < materials.Length; ++i)
+				{
+					materialInsts[i] = new Material(Shader.Find("tk2d/BlendVertexColor"));
+	#if UNITY_EDITOR
+					materialInsts[i].hideFlags = HideFlags.DontSave;
+	#endif
+				}
+			}
+			else {
+				for (int i = 0; i < materials.Length; ++i)
+				{
+					materialInsts[i] = Instantiate(materials[i]) as Material;
+	#if UNITY_EDITOR
+					materialInsts[i].hideFlags = HideFlags.DontSave;
+	#endif
+				}
 			}
 			for (int i = 0; i < spriteDefinitions.Length; ++i)
 			{
@@ -435,9 +456,20 @@ public class tk2dSpriteCollectionData : MonoBehaviour
 	/// Please ensure that names, regions & anchor arrays have same dimension.
 	/// Use <see cref="tk2dBaseSprite.CreateFromTexture"/> if you need to create only one sprite from a texture.
 	/// </summary>
-	public static tk2dSpriteCollectionData CreateFromTexture(Texture2D texture, tk2dRuntime.SpriteCollectionSize size, string[] names, Rect[] regions, Vector2[] anchors)
+	public static tk2dSpriteCollectionData CreateFromTexture(Texture texture, tk2dRuntime.SpriteCollectionSize size, string[] names, Rect[] regions, Vector2[] anchors)
 	{
 		return tk2dRuntime.SpriteCollectionGenerator.CreateFromTexture(texture, size, names, regions, anchors);
+	}
+
+	/// <summary>
+	/// Create a sprite collection at runtime from a texturepacker exported file.
+	/// Ensure this is exported using the "2D Toolkit" export mode in TexturePacker. 
+	/// You can find this exporter in Assets/TK2DROOT/tk2d/Goodies/TexturePacker/Exporter
+	/// You can use also use this to load sprite collections at runtime.
+	/// </summary>
+	public static tk2dSpriteCollectionData CreateFromTexturePacker(tk2dRuntime.SpriteCollectionSize size, string texturePackerData, Texture texture)
+	{
+		return tk2dRuntime.SpriteCollectionGenerator.CreateFromTexturePacker(size, texturePackerData, texture);
 	}
 
 	public void ResetPlatformData()

@@ -11,14 +11,13 @@ public class tk2dPreferences {
 	public bool showIds = false;
 	public bool isProSkin = true;
 	public string platform = "";
-	public bool displayEditSpriteButton = false;
 
 	public int spriteCollectionListWidth {
 		get { return _spriteCollectionListWidth; }
 		set { if (_spriteCollectionListWidth != value) _spriteCollectionListWidth = value; Save(); }
 	}
 	public int spriteCollectionInspectorWidth {
-		get { return _spriteCollectionInspectorWidth; }
+		get { return Mathf.Max(_spriteCollectionInspectorWidth, _minSpriteCollectionInspectorWidth); }
 		set { if (_spriteCollectionInspectorWidth != value) _spriteCollectionInspectorWidth = value; Save(); }
 	}
 	public int animListWidth {
@@ -40,6 +39,7 @@ public class tk2dPreferences {
 
 	int _spriteCollectionListWidth = 200;
 	int _spriteCollectionInspectorWidth = 260;
+	int _minSpriteCollectionInspectorWidth = 190;
 	int _animListWidth = 200;
 	int _animInspectorWidth = 260;
 	int _animFrameWidth = -1;
@@ -151,7 +151,6 @@ public class tk2dPreferences {
 public class tk2dPreferencesEditor : EditorWindow
 {
 	GUIContent label_spriteThumbnails = new GUIContent("Sprite Thumbnails", "Turn off sprite thumbnails to save memory.");
-	GUIContent label_displayEditButton = new GUIContent("Display Edit Button", "Display edit shortcut on sprite picker");
 
 	GUIContent label_autoRebuild = new GUIContent("Auto Rebuild", "Auto rebuild sprite collections when source textures have changed.");
 	GUIContent label_showIds = new GUIContent("Show Ids", "Show sprite and animation Ids.");
@@ -169,7 +168,6 @@ public class tk2dPreferencesEditor : EditorWindow
 		EditorGUIUtility.LookLikeControls(150.0f);
 		
 		prefs.displayTextureThumbs = EditorGUILayout.Toggle(label_spriteThumbnails, prefs.displayTextureThumbs);
-		prefs.displayEditSpriteButton = EditorGUILayout.Toggle(label_displayEditButton, prefs.displayEditSpriteButton);
 
 		prefs.autoRebuild = EditorGUILayout.Toggle(label_autoRebuild, prefs.autoRebuild);
 		
@@ -206,6 +204,7 @@ public class tk2dPreferencesEditor : EditorWindow
 			if (newPlatform != prefs.platform)
 			{
 				prefs.platform = newPlatform;
+				UnityEditor.EditorPrefs.SetString("tk2d_platform", newPlatform);
 				tk2dSystem.CurrentPlatform = prefs.platform; // mirror to where it matters
 				tk2dSystemUtility.PlatformChanged(); // tell the editor things have changed
 				tk2dEditorUtility.UnloadUnusedAssets();

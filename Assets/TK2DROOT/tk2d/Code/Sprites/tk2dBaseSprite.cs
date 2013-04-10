@@ -8,6 +8,33 @@ using System.Collections;
 public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBuild
 {
 	/// <summary>
+	/// Anchor.
+	/// NOTE: The order in this enum is deliberate, to initialize at LowerLeft for backwards compatibility.
+	/// This is also the reason it is local here. Other Anchor enums are NOT compatbile. Do not cast.
+	/// </summary>
+    public enum Anchor
+    {
+		/// <summary>Lower left</summary>
+		LowerLeft,
+		/// <summary>Lower center</summary>
+		LowerCenter,
+		/// <summary>Lower right</summary>
+		LowerRight,
+		/// <summary>Middle left</summary>
+		MiddleLeft,
+		/// <summary>Middle center</summary>
+		MiddleCenter,
+		/// <summary>Middle right</summary>
+		MiddleRight,
+		/// <summary>Upper left</summary>
+		UpperLeft,
+		/// <summary>Upper center</summary>
+		UpperCenter,
+		/// <summary>Upper right</summary>
+		UpperRight,
+    }
+
+	/// <summary>
 	/// This is now private. You should use <see cref="tk2dBaseSprite.Collection">Collection</see> if you wish to read this value.
 	/// Use <see cref="tk2dBaseSprite.SwitchCollectionAndSprite">SwitchCollectionAndSprite</see> when you need to switch sprite collection.
 	/// </summary>
@@ -381,13 +408,15 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 		}
 	}
 	
-	protected void SetColors(Color[] dest)
+	protected void SetColors(Color32[] dest)
 	{
 		Color c = _color;
         if (collectionInst.premultipliedAlpha) { c.r *= c.a; c.g *= c.a; c.b *= c.a; }
+        Color32 c32 = c;
+
 		int numVertices = GetNumVertices();
 		for (int i = 0; i < numVertices; ++i)
-			dest[i] = c;
+			dest[i] = c32;
 	}
 	
 	/// <summary>
@@ -456,7 +485,7 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	
 	protected virtual bool NeedBoxCollider() { return false; }
 	
-	protected void UpdateCollider()
+	protected virtual void UpdateCollider()
 	{
 		var sprite = collectionInst.spriteDefinitions[_spriteId];
 		
@@ -497,7 +526,7 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	}
 	
 	// This is separate to UpdateCollider, as UpdateCollider can only work with BoxColliders, and will NOT create colliders
-	protected void CreateCollider()
+	protected virtual void CreateCollider()
 	{
 		var sprite = collectionInst.spriteDefinitions[_spriteId];
 		if (sprite.colliderType == tk2dSpriteDefinition.ColliderType.Unset)
@@ -557,7 +586,7 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	}
 	
 #if UNITY_EDITOR
-	public void EditMode__CreateCollider()
+	public virtual void EditMode__CreateCollider()
 	{
 		// Revert to runtime behaviour when the game is running
 		if (Application.isPlaying)
@@ -625,7 +654,7 @@ public abstract class tk2dBaseSprite : MonoBehaviour, tk2dRuntime.ISpriteCollect
 	/// Use <see cref="tk2dSpriteCollectionData.CreateFromTexture"/> if you need to create a sprite collection
 	/// with multiple sprites.
 	/// </summary>
-	public static GameObject CreateFromTexture<T>(Texture2D texture, tk2dRuntime.SpriteCollectionSize size, Rect region, Vector2 anchor) where T : tk2dBaseSprite
+	public static GameObject CreateFromTexture<T>(Texture texture, tk2dRuntime.SpriteCollectionSize size, Rect region, Vector2 anchor) where T : tk2dBaseSprite
 	{
 		tk2dSpriteCollectionData data = tk2dRuntime.SpriteCollectionGenerator.CreateFromTexture(texture, size, region, anchor);
 		if (data == null)

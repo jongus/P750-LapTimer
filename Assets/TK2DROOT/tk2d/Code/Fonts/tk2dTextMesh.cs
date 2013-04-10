@@ -48,7 +48,7 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 	Vector3[] vertices;
 	Vector2[] uvs;
 	Vector2[] uv2;
-	Color[] colors;
+	Color32[] colors;
 
 	/// <summary>
 	/// Formats the string using the current settings, and returns the formatted string.
@@ -244,7 +244,7 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 	
 	
 	// Channel select color constants
-	static readonly Color[] channelSelectColors = new Color[] { new Color(0,0,1,0), new Color(0,1,0,0), new Color(1,0,0,0), new Color(0,0,0,1) };
+	static readonly Color32[] channelSelectColors = new Color32[] { new Color32(0,0,255,0), new Color(0,255,0,0), new Color(255,0,0,0), new Color(0,0,0,255) };
 	
 	void InitInstance()
 	{
@@ -491,7 +491,7 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 			
 			if (_fontInst.isPacked)
 			{
-				Color c = channelSelectColors[chr.channel];
+				Color32 c = channelSelectColors[chr.channel];
 				colors[target * 4 + 0] = c;
 				colors[target * 4 + 1] = c;
 				colors[target * 4 + 2] = c;
@@ -542,13 +542,13 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 			_fontInst.InitDictionary();
 			FormatText();
 			
-			Color topColor = _color;
-			Color bottomColor = _useGradient?_color2:_color;
+			Color32 topColor = _color;
+			Color32 bottomColor = _useGradient?_color2:_color;
 
 			// volatile data
 			vertices = new Vector3[_maxChars * 4];
 			uvs = new Vector2[_maxChars * 4];
-			colors = new Color[_maxChars * 4];
+			colors = new Color32[_maxChars * 4];
 			if (_fontInst.textureGradients)
 			{
 				uv2 = new Vector2[_maxChars * 4];
@@ -619,7 +619,7 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 				mesh.uv1 = uv2;
 			}
 			mesh.triangles = triangles;
-			mesh.colors = colors;
+			mesh.colors32 = colors;
 			mesh.RecalculateBounds();
 
 			updateFlags = UpdateFlags.UpdateNone;
@@ -669,15 +669,15 @@ public class tk2dTextMesh : MonoBehaviour, tk2dRuntime.ISpriteCollectionForceBui
 	
 			if (!font.isPacked && (updateFlags & UpdateFlags.UpdateColors) != 0) // packed fonts don't support tinting
 			{
-				Color topColor = _color;
-				Color bottomColor = _useGradient ? _color2 : _color;
+				Color32 topColor = _color;
+				Color32 bottomColor = _useGradient ? _color2 : _color;
 	
 				for (int i = 0; i < colors.Length; i += 4)
 				{
 					colors[i + 0] = colors[i + 1] = topColor;
 					colors[i + 2] = colors[i + 3] = bottomColor;
 				}
-				mesh.colors = colors;
+				mesh.colors32 = colors;
 			}
 		}
 		

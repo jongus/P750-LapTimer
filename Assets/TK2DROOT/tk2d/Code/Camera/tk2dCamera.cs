@@ -380,7 +380,10 @@ public class tk2dCamera : MonoBehaviour
 			top = pixelHeight * maxHeight + offset.y +  rectOffsetY;
 		}
 		else {
-			mainCamera.rect = new Rect(0, 0, 1, 1);
+			Rect targetRect = new Rect(0, 0, 1, 1);
+			if (mainCamera.rect != targetRect) {
+				mainCamera.rect = targetRect;
+			}
 		}
 
 		_screenExtents.Set(left / scale.x, top / scale.y, (right - left) / scale.x, (bottom - top) / scale.y);
@@ -418,6 +421,8 @@ public class tk2dCamera : MonoBehaviour
 		m[2,0] = 0;  m[2,1] = 0;  m[2,2] = z;  m[2,3] = c;
 		m[3,0] = 0;  m[3,1] = 0;  m[3,2] = 0;  m[3,3] = 1;
 
-		mainCamera.projectionMatrix = m;			
+		if (mainCamera.projectionMatrix != m) {
+			mainCamera.projectionMatrix = m;
+		}
 	}
 }

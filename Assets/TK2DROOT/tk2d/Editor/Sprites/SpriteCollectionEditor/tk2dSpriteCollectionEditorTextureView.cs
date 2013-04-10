@@ -388,6 +388,7 @@ namespace tk2dEditor.SpriteCollectionEditor
 				if (mode == Mode.Collider && !allowCollider) mode = Mode.Texture;
 				
 				Rect rect = GUILayoutUtility.GetRect(128.0f, 128.0f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+				tk2dGrid.Draw(rect);
 				
 				// middle mouse drag and scroll zoom
 				if (rect.Contains(Event.current.mousePosition))
@@ -458,12 +459,12 @@ namespace tk2dEditor.SpriteCollectionEditor
 			}
 				
 			// Draw toolbar
-			DrawToolbar(param);
+			DrawToolbar(param, texture);
 			
 			GUILayout.EndVertical();
 		}
 		
-		public void DrawToolbar(tk2dSpriteCollectionDefinition param)
+		public void DrawToolbar(tk2dSpriteCollectionDefinition param, Texture2D texture)
 		{
 			bool allowAnchor = param.anchor == tk2dSpriteCollectionDefinition.Anchor.Custom;
 			bool allowCollider = (param.colliderType == tk2dSpriteCollectionDefinition.ColliderType.Polygon ||
@@ -487,6 +488,9 @@ namespace tk2dEditor.SpriteCollectionEditor
 				(mode == Mode.Texture && param.customSpriteGeometry))
 			{
 				drawColliderNormals = GUILayout.Toggle(drawColliderNormals, new GUIContent("Show Normals", "Shift+N"), EditorStyles.toolbarButton);
+			}
+			if (mode == Mode.Texture && texture != null) {
+				GUILayout.Label(string.Format("W: {0} H: {1}", texture.width, texture.height));
 			}
 			GUILayout.EndHorizontal();			
 		}

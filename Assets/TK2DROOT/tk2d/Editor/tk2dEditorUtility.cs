@@ -3,10 +3,34 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 
+[InitializeOnLoad]
 public static class tk2dEditorUtility
 {
-	public static double version = 1.91;
+	public static double version = 1.92;
 	public static int releaseId = 1; // < -10000 = alpha, other negative = beta release, 0 = final, positive = final patch
+
+	static tk2dEditorUtility() {
+		System.Reflection.FieldInfo undoCallback = typeof(EditorApplication).GetField("undoRedoPerformed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+		if (undoCallback != null) {
+			undoCallback.SetValue(null, (EditorApplication.CallbackFunction)OnUndoRedo);
+		}
+		else {
+			Debug.LogError("tk2d Undo/Redo callback failed. Undo/Redo not supported in this version of Unity.");
+		}
+	}
+
+	static void OnUndoRedo() {
+		foreach (GameObject go in Selection.gameObjects) {
+			tk2dBaseSprite spr = go.GetComponent<tk2dBaseSprite>();
+			if (spr != null) {
+				spr.ForceBuild();
+			}
+			tk2dTextMesh tm = go.GetComponent<tk2dTextMesh>();
+			if (tm != null) {
+				tm.ForceBuild();
+			}
+		}
+	}
 	
 	public static string ReleaseStringIdentifier(double _version, int _releaseId)
 	{
@@ -21,13 +45,13 @@ public static class tk2dEditorUtility
 	/// <summary>
 	/// Release filename for the current version
 	/// </summary>
-	public static string CurrentReleaseFileName()
+	public static string CurrentReleaseFileName(string product, double _version, int _releaseId)
 	{
-		string id = "2dtoolkit" + version.ToString();
-		if (releaseId == 0) id += "final";
-		else if (releaseId > 0) id += "final_patch" + releaseId.ToString();
-		else if (releaseId < -10000) id += " alpha " + (-releaseId - 10000).ToString();
-		else if (releaseId < 0) id += "beta" + (-releaseId).ToString();
+		string id = product + _version.ToString();
+		if (_releaseId == 0) id += "final";
+		else if (_releaseId > 0) id += "final_patch" + _releaseId.ToString();
+		else if (_releaseId < -10000) id += " alpha " + (-_releaseId - 10000).ToString();
+		else if (_releaseId < 0) id += "beta" + (-_releaseId).ToString();
 		return id;
 	}
 	
@@ -131,7 +155,7 @@ public static class tk2dEditorUtility
 	{
 		tk2dIndex newIndex = ScriptableObject.CreateInstance<tk2dIndex>();
 		newIndex.version = tk2dIndex.CURRENT_VERSION;
-		newIndex.hideFlags = HideFlags.DontSave;
+		newIndex.hideFlags = HideFlags.DontSave; // get this to not be destroyed in Unity 4.1
 		
 		List<string> rebuildSpriteCollectionPaths = new List<string>();
 		
