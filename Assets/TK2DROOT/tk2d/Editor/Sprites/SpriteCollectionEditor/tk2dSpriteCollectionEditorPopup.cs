@@ -16,7 +16,7 @@ namespace tk2dEditor.SpriteCollectionEditor
 		Texture2D GetTextureForSprite(int spriteId);
 		
 		SpriteCollectionProxy SpriteCollection { get; }
-		
+
 		int InspectorWidth { get; }
 		SpriteView SpriteView { get; }
 		void SelectSpritesFromList(int[] indices);
@@ -60,7 +60,7 @@ public class tk2dSpriteCollectionEditorPopup : EditorWindow, IEditorHost
 	SpriteCollectionProxy spriteCollectionProxy = null;
 	public SpriteCollectionProxy SpriteCollection { get { return spriteCollectionProxy; } }
 	public SpriteView SpriteView { get { return spriteView; } }
-	
+
 	// This lists all entries
 	List<SpriteCollectionEditorEntry> entries = new List<SpriteCollectionEditorEntry>();
 	// This lists all selected entries
@@ -154,12 +154,18 @@ public class tk2dSpriteCollectionEditorPopup : EditorWindow, IEditorHost
 		if (searchFilter.Length > 0)
 		{
 			// re-sort list
-			entries = (from entry in entries where Contains(entry.name, searchFilter) orderby entry.type, entry.name select entry).ToList();
+			entries = (from entry in entries where Contains(entry.name, searchFilter) select entry)
+						.OrderBy( e => e.type )
+						.ThenBy( e => e.name, new tk2dEditor.Shared.NaturalComparer() )
+						.ToList();
 		}
 		else
 		{
 			// re-sort list
-			entries = (from entry in entries orderby entry.type, entry.name select entry).ToList();
+			entries = (from entry in entries select entry)
+						.OrderBy( e => e.type )
+						.ThenBy( e => e.name, new tk2dEditor.Shared.NaturalComparer() )
+						.ToList();
 		}
 		for (int i = 0; i < entries.Count; ++i)
 			entries[i].listIndex = i;
@@ -309,9 +315,12 @@ public class tk2dSpriteCollectionEditorPopup : EditorWindow, IEditorHost
 	void OnDisable()
 	{
 		ClearTextureCache();
-
 		_spriteCollection = null;
-		tk2dEditorUtility.CollectAndUnloadUnusedAssets();
+	}
+
+	void OnDestroy() {
+		tk2dSpriteThumbnailCache.Done();
+		tk2dEditorSkin.Done();
 	}
 	
 	string searchFilter = "";

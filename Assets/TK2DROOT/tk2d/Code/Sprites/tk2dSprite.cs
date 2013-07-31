@@ -124,7 +124,7 @@ public class tk2dSprite : tk2dBaseSprite
 	/// with multiple sprites.
 	/// Convenience alias of tk2dBaseSprite.CreateFromTexture<tk2dSprite>(...)
 	/// </summary>
-	public static GameObject CreateFromTexture(Texture texture, tk2dRuntime.SpriteCollectionSize size, Rect region, Vector2 anchor)
+	public static GameObject CreateFromTexture(Texture texture, tk2dSpriteCollectionSize size, Rect region, Vector2 anchor)
 	{
 		return tk2dBaseSprite.CreateFromTexture<tk2dSprite>(texture, size, region, anchor);
 	}
@@ -136,12 +136,10 @@ public class tk2dSprite : tk2dBaseSprite
 	
 	protected void UpdateColorsImpl()
 	{
-#if UNITY_EDITOR
 		// This can happen with prefabs in the inspector
 		if (mesh == null || meshColors == null || meshColors.Length == 0)
 			return;
-#endif
-		
+
 		SetColors(meshColors);
 		mesh.colors32 = meshColors;
 	}
@@ -150,11 +148,9 @@ public class tk2dSprite : tk2dBaseSprite
 	{
 		var sprite = collectionInst.spriteDefinitions[spriteId];
 		
-#if UNITY_EDITOR
 		// This can happen with prefabs in the inspector
 		if (mesh == null || meshVertices == null || meshVertices.Length == 0)
 			return;
-#endif
 		
 		// Clear out normals and tangents when switching from a sprite with them to one without
 		if (sprite.normals.Length != meshNormals.Length)
@@ -176,14 +172,9 @@ public class tk2dSprite : tk2dBaseSprite
 
 	protected void UpdateGeometryImpl()
 	{
-#if UNITY_EDITOR
 		// This can happen with prefabs in the inspector
 		if (mesh == null)
 			return;
-#else
-		if (mesh == null)
-			Build();
-#endif
 		
 		var sprite = collectionInst.spriteDefinitions[spriteId];
 		if (meshVertices == null || meshVertices.Length != sprite.positions.Length)
@@ -214,16 +205,24 @@ public class tk2dSprite : tk2dBaseSprite
 	
 	protected override int GetCurrentVertexCount()
 	{
-#if UNITY_EDITOR
 		if (meshVertices == null)
 			return 0;
-#else
-		if (meshVertices == null)
-			Build();
-#endif
 		// Really nasty bug here found by Andrew Welch.
 		return meshVertices.Length;
 	}
+
+#if UNITY_EDITOR
+	void OnDrawGizmos() {
+		if (collectionInst != null && spriteId >= 0 && spriteId < collectionInst.Count) {
+			var sprite = collectionInst.spriteDefinitions[spriteId];
+			Gizmos.color = Color.clear;
+			Gizmos.matrix = transform.localToWorldMatrix;
+			Gizmos.DrawCube(Vector3.Scale(sprite.untrimmedBoundsData[0], _scale), Vector3.Scale(sprite.untrimmedBoundsData[1], _scale));
+			Gizmos.matrix = Matrix4x4.identity;
+			Gizmos.color = Color.white;
+		}
+	}
+#endif
 	
 	public override void ForceBuild()
 	{

@@ -119,7 +119,7 @@ public class tk2dSpriteCollectionDefinition
 	
 	public bool dice = false;
 	public int diceUnitX = 64;
-	public int diceUnitY = 0;
+	public int diceUnitY = 64;
 	
 	public Pad pad = Pad.Default;
 	public int extraPadding = 0; // default
@@ -136,11 +136,13 @@ public class tk2dSpriteCollectionDefinition
 	public ColliderType colliderType = ColliderType.UserDefined;
 	public Vector2 boxColliderMin, boxColliderMax;
 	public tk2dSpriteColliderIsland[] polyColliderIslands;
-	public PolygonColliderCap polyColliderCap = PolygonColliderCap.None;
+	public PolygonColliderCap polyColliderCap = PolygonColliderCap.FrontAndBack;
 	public bool colliderConvex = false;
 	public bool colliderSmoothSphereCollisions = false;
 	public ColliderColor colliderColor = ColliderColor.Default;
-	
+
+	public List<tk2dSpriteDefinition.AttachPoint> attachPoints = new List<tk2dSpriteDefinition.AttachPoint>();
+
 	public void CopyFrom(tk2dSpriteCollectionDefinition src)
 	{
 		name = src.name;
@@ -215,6 +217,13 @@ public class tk2dSpriteCollectionDefinition
 		{
 			geometryIslands = new tk2dSpriteColliderIsland[0];
 		}
+
+		attachPoints = new List<tk2dSpriteDefinition.AttachPoint>(src.attachPoints.Count);
+		foreach (tk2dSpriteDefinition.AttachPoint srcAp in src.attachPoints) {
+			tk2dSpriteDefinition.AttachPoint ap = new tk2dSpriteDefinition.AttachPoint();
+			ap.CopyFrom(srcAp);
+			attachPoints.Add(ap);
+		}
 	}
 	
 	public void Clear()
@@ -283,6 +292,11 @@ public class tk2dSpriteCollectionDefinition
 		if (colliderColor != src.colliderColor) return false;
 		if (colliderSmoothSphereCollisions != src.colliderSmoothSphereCollisions) return false;
 		if (colliderConvex != src.colliderConvex) return false;
+
+		if (attachPoints.Count != src.attachPoints.Count) return false;
+		for (int i = 0; i < attachPoints.Count; ++i) {
+			if (!attachPoints[i].CompareTo(src.attachPoints[i])) return false;
+		}
 		
 		return true;
 	}	
@@ -460,7 +474,7 @@ public class tk2dSpriteCollectionPlatform
 [AddComponentMenu("2D Toolkit/Backend/tk2dSpriteCollection")]
 public class tk2dSpriteCollection : MonoBehaviour 
 {
-	public const int CURRENT_VERSION = 3;
+	public const int CURRENT_VERSION = 4;
 
 	public enum NormalGenerationMode
 	{
@@ -508,6 +522,7 @@ public class tk2dSpriteCollection : MonoBehaviour
 	public bool forceSquareAtlas = false;
 	public float atlasWastage;
 	public bool allowMultipleAtlases = false;
+	public bool removeDuplicates = true;
 	
     public tk2dSpriteCollectionDefinition[] textureParams;
     
@@ -518,10 +533,32 @@ public class tk2dSpriteCollection : MonoBehaviour
 	public Material[] atlasMaterials;
 	public Texture2D[] atlasTextures;
 	
-	public bool useTk2dCamera = false;
-	public int targetHeight = 640;
-	public float targetOrthoSize = 1.0f;
+	[SerializeField] private bool useTk2dCamera = false;
+	[SerializeField] private int targetHeight = 640;
+	[SerializeField] private float targetOrthoSize = 10.0f;
+	
+	// New method of storing sprite size
+	public tk2dSpriteCollectionSize sizeDef = tk2dSpriteCollectionSize.Default();
+
 	public float globalScale = 1.0f;
+	public float globalTextureRescale = 1.0f;
+
+	// Remember test data for attach points
+	[System.Serializable]
+	public class AttachPointTestSprite {
+		public string attachPointName = "";
+		public tk2dSpriteCollectionData spriteCollection = null;
+		public int spriteId = -1;
+		public bool CompareTo(AttachPointTestSprite src) {
+			return src.attachPointName == attachPointName && src.spriteCollection == spriteCollection && src.spriteId == spriteId;
+		}
+		public void CopyFrom(AttachPointTestSprite src) {
+			attachPointName = src.attachPointName;
+			spriteCollection = src.spriteCollection;
+			spriteId = src.spriteId;
+		}
+	}
+	public List<AttachPointTestSprite> attachPointTestSprites = new List<AttachPointTestSprite>();
 	
 	// Texture settings
 	[SerializeField]
@@ -577,6 +614,10 @@ public class tk2dSpriteCollection : MonoBehaviour
 
 				textureRefs = null;
 			}
+		}
+
+		if (version < 4) {
+			sizeDef.CopyFromLegacy( useTk2dCamera, targetOrthoSize, targetHeight );
 		}
 
 		version = CURRENT_VERSION;

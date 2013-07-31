@@ -9,8 +9,16 @@ public class tk2dPreferences {
 	
 	public bool autoRebuild = true;
 	public bool showIds = false;
-	public bool isProSkin = true;
 	public string platform = "";
+
+	public bool enableSpriteHandles = true;
+	public bool enableMoveHandles = true;
+
+	public Color tileMapToolColor_brush = new Color32(0, 128, 255, 32);
+	public Color tileMapToolColor_brushRandom = new Color32(128, 255, 0, 32);
+	public Color tileMapToolColor_erase = new Color32(255, 64, 64, 32);
+	public Color tileMapToolColor_eyedropper = new Color32(255, 212, 32, 32);
+	public Color tileMapToolColor_cut = new Color32(255, 128, 32, 32);
 
 	public int spriteCollectionListWidth {
 		get { return _spriteCollectionListWidth; }
@@ -46,7 +54,7 @@ public class tk2dPreferences {
 	int _spriteThumbnailSize = 128;
 
 	// Grid settings
-
+	[System.Xml.Serialization.XmlIgnoreAttribute]
 	public tk2dGrid.Type gridType {
 		get { return _gridType; }
 		set {
@@ -57,6 +65,7 @@ public class tk2dPreferences {
 			}
 		}
 	}
+	[System.Xml.Serialization.XmlIgnoreAttribute]
 	public Color customGridColor0 {
 		get { return _customGridColor0; }
 		set { 
@@ -67,6 +76,7 @@ public class tk2dPreferences {
 			}
 		}
 	}
+	[System.Xml.Serialization.XmlIgnoreAttribute]
 	public Color customGridColor1 {
 		get { return _customGridColor1; }
 		set { 
@@ -78,9 +88,9 @@ public class tk2dPreferences {
 		}
 	}
 	
-	tk2dGrid.Type _gridType = tk2dGrid.Type.DarkChecked;
-	Color _customGridColor0 = Color.white;
-	Color _customGridColor1 = Color.gray;
+	public tk2dGrid.Type _gridType = tk2dGrid.Type.DarkChecked;
+	public Color _customGridColor0 = Color.white;
+	public Color _customGridColor1 = Color.gray;
 
 	// Instance
 	static tk2dPreferences _inst = null;
@@ -154,12 +164,19 @@ public class tk2dPreferencesEditor : EditorWindow
 
 	GUIContent label_autoRebuild = new GUIContent("Auto Rebuild", "Auto rebuild sprite collections when source textures have changed.");
 	GUIContent label_showIds = new GUIContent("Show Ids", "Show sprite and animation Ids.");
+
+	GUIContent label_enableSpriteHandles = new GUIContent("Enable Sprite Controls", "Enable controls for sprite resizing, rotation etc.");
+	GUIContent label_enableMoveHandles = new GUIContent("Drag sprite to move", "Allow dragging sprite in all modes. When turned off, this is only available when the Unity move/rotate/scale is not visible.");
 	
 #if (UNITY_3_0 || UNITY_3_1 || UNITY_3_2 || UNITY_3_3 || UNITY_3_4)
 	GUIContent label_proSkin = new GUIContent("Pro Skin", "Select this to use the Dark skin.");
 #endif	
 
 	Vector2 scroll = Vector2.zero;
+
+	void OnDestroy() {
+		tk2dEditorSkin.Done();
+	}
 
 	void OnGUI()
 	{
@@ -211,13 +228,37 @@ public class tk2dPreferencesEditor : EditorWindow
 			}
 		}
 
-#if (UNITY_3_0 || UNITY_3_1 || UNITY_3_2 || UNITY_3_3 || UNITY_3_4)
-		prefs.isProSkin = EditorGUILayout.Toggle(label_proSkin, prefs.isProSkin);
-#endif
+		prefs.enableSpriteHandles = EditorGUILayout.Toggle (label_enableSpriteHandles, prefs.enableSpriteHandles);
+		bool oldGuiEnable = GUI.enabled;
+		GUI.enabled = prefs.enableSpriteHandles;
+		EditorGUI.indentLevel++;
+		prefs.enableMoveHandles = EditorGUILayout.Toggle( label_enableMoveHandles, prefs.enableMoveHandles );
+		EditorGUI.indentLevel--;
+		GUI.enabled = oldGuiEnable;
+
+		EditorGUILayout.LabelField("Tilemap Paint Mode Colors");
+		++EditorGUI.indentLevel;
+		EditorGUI.BeginChangeCheck();
+		prefs.tileMapToolColor_brush = EditorGUILayout.ColorField("Brush", prefs.tileMapToolColor_brush);
+		prefs.tileMapToolColor_brushRandom = EditorGUILayout.ColorField("Random", prefs.tileMapToolColor_brushRandom);
+		prefs.tileMapToolColor_erase = EditorGUILayout.ColorField("Erase", prefs.tileMapToolColor_erase);
+		prefs.tileMapToolColor_eyedropper = EditorGUILayout.ColorField("Eyedropper", prefs.tileMapToolColor_eyedropper);
+		prefs.tileMapToolColor_cut = EditorGUILayout.ColorField("Cut", prefs.tileMapToolColor_cut);
+		if (EditorGUI.EndChangeCheck())
+			updateTilemapCursorColor = true;
+		--EditorGUI.indentLevel;
+
 		GUILayout.EndScrollView();
 
 		if (GUI.changed) {
 			tk2dPreferences.inst.Save();
 		}
+	}
+
+	static bool updateTilemapCursorColor = false;
+	static public bool CheckTilemapCursorColorUpdate() {
+		bool result = updateTilemapCursorColor;
+		updateTilemapCursorColor = false;
+		return result;
 	}
 }

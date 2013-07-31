@@ -18,7 +18,7 @@
 	<DebugType>full</DebugType>
 	<Optimize>false</Optimize>
 	<OutputPath>Temp\bin\Debug\</OutputPath>
-	<DefineConstants>DEBUG;TRACE;UNITY_3_5_7;UNITY_3_5;UNITY_EDITOR;ENABLE_PROFILER;UNITY_IOS;UNITY_IPHONE;ENABLE_GENERICS;ENABLE_TERRAIN;ENABLE_WEBCAM;ENABLE_MICROPHONE;ENABLE_NETWORK;ENABLE_CLOTH;ENABLE_WWW;ENABLE_DUCK_TYPING</DefineConstants>
+	<DefineConstants>DEBUG;TRACE;UNITY_IPHONE;UNITY_IPHONE_API;ENABLE_MICROPHONE;ENABLE_IMAGEEFFECTS;ENABLE_WEBCAM;ENABLE_AUDIO_FMOD;ENABLE_NETWORK;ENABLE_MONO;ENABLE_PHYSICS;ENABLE_TERRAIN;ENABLE_CACHING;ENABLE_SUBSTANCE;ENABLE_GENERICS;ENABLE_CLOTH;ENABLE_GAMECENTER;UNITY_IOS;ENABLE_AUDIO;ENABLE_WWW;ENABLE_SHADOWS;UNITY_4_1_5;UNITY_4_1;DEVELOPMENT_BUILD;ENABLE_PROFILER;UNITY_EDITOR;ENABLE_DUCK_TYPING</DefineConstants>
 	<ErrorReport>prompt</ErrorReport>
 	<WarningLevel>4</WarningLevel>
 	<NoWarn>0169</NoWarn>
@@ -47,12 +47,14 @@
      <Compile Include="Assets\CreateScriptDialog\Editor\NewScriptGenerator.cs" />
      <Compile Include="Assets\CreateScriptDialog\Editor\NewScriptWindow.cs" />
      <Compile Include="Assets\CreateScriptDialog\Editor\ScriptPrescription.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2d\Editor\Camera\tk2dCameraAnchorEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Camera\tk2dCameraEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Fonts\tk2dFontBuilder.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Fonts\tk2dFontEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Fonts\tk2dTextMeshEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Runtime\tk2dResourceEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Runtime\tk2dSystemUtility.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2d\Editor\Shared\tk2dNaturalComparer.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\Atlas\tk2dAtlasBuilder.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\Atlas\tk2dAtlasRect.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\Atlas\tk2dMaxRectsBinPack.cs" />
@@ -71,13 +73,16 @@
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\SpriteCollectionEditor\tk2dSpriteCollectionEditorTextureView.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\SpritePicker\tk2dSpritePickerPopup.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\TextureProcessing\tk2dFloydSteinbergDithering.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\Triangulator\tk2dSpriteFromTextureEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\Triangulator\tk2dTriangulator.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dAnimatedSpriteEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dClippedSpriteEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSlicedSpriteEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSpriteAnimationEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSpriteAnimatorEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSpriteCollectionBuilder.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSpriteCollectionBuilderDeprecated.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSpriteCollectionBuilderUtil.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSpriteCollectionPlatformBuilder.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSpriteCollectionTextureWatcher.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\Sprites\tk2dSpriteEditor.cs" />
@@ -101,8 +106,33 @@
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\tk2dMenu.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\tk2dPreferencesEditor.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\tk2dScaleUtility.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2d\Editor\tk2dSceneHelper.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\tk2dSpriteGuiUtility.cs" />
      <Compile Include="Assets\TK2DROOT\tk2d\Editor\tk2dUpdateWindow.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dTileMap\Editor\tk2dTileMapScratchpad.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dTileMap\Editor\tk2dTileMapToolbar.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIBaseItemControlEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIControlsHelperEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUICustomEditorGUILayout.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIDragItemEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIDropDownMenuEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIHoverItemEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIMultiStateToggleButtonEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIProgressBarEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIScrollableAreaEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIScrollbarEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUISoundItemEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUITextInputEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIToggleButtonEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIToggleButtonGroupEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIToggleControlEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUITweenItemEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIUpDownButtonEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Controls\tk2dUIUpDownHoverButtonEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Core\tk2dUIItemBoundsHelper.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Core\tk2dUIItemEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Core\tk2dUIMaskEditor.cs" />
+     <Compile Include="Assets\TK2DROOT\tk2dUI\Editor\Core\tk2dUISpriteAnimatorEditor.cs" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\MonoBehaviour.cs.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Editor Window.cs.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\LitSolidVertexColor.shader" />
@@ -111,6 +141,7 @@
      <None Include="Assets\TK2DROOT\tk2d\Shaders\SolidVertexColor.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Scriptable Wizard.cs.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Scriptable Object.cs.txt" />
+     <None Include="Assets\TK2DROOT\tk2dUI\Shaders\DepthMask.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Empty Class.boo.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\LitPremulVertexColor.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\MonoBehaviour.functions.txt" />
@@ -121,6 +152,7 @@
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Empty Class.cs.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\Blend2TexVertexColor.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Custom Editor.js.txt" />
+     <None Include="Assets\TK2DROOT\tk2dUI\Shaders\DepthMaskSolid.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\AssetPostprocessor.functions.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Empty Class.js.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\BlendVertexColor.shader" />
@@ -135,19 +167,28 @@
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Editor.functions.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\MonoBehaviour.js.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Scriptable Wizard.boo.txt" />
+     <None Include="Assets\Fonts\OpenSansCB_450px.fnt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\LitBlendVertexColor.shader" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Asset Postprocessor.boo.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Asset Postprocessor.js.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Scriptable Wizard.js.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Scriptable Object.js.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Function Call From Menu.cs.txt" />
+     <None Include="Assets\Fonts\OpenSansSB_55px.fnt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\MonoBehaviour.boo.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Scriptable Object.boo.txt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Function Call From Menu.boo.txt" />
+     <None Include="Assets\Fonts\OpenSansCB_55px.fnt" />
      <None Include="Assets\CreateScriptDialog\SmartScriptTemplates\Editor Window.js.txt" />
      <None Include="Assets\TK2DROOT\tk2d\Shaders\AdditiveVertexColor.shader" />
  <Reference Include="Assets\TK2DROOT\tk2d\Editor\tk2dExternal">
  <HintPath>Assets\TK2DROOT\tk2d\Editor\tk2dExternal.dll</HintPath>
+ </Reference>
+ <Reference Include="Assets\TK2DROOT\tk2d\Editor\tk2dSkin">
+ <HintPath>Assets\TK2DROOT\tk2d\Editor\tk2dSkin.dll</HintPath>
+ </Reference>
+ <Reference Include="\Applications\Unity\Unity.app\Contents\Frameworks\Managed\UnityEditor.Graphs">
+ <HintPath>\Applications\Unity\Unity.app\Contents\Frameworks\Managed\UnityEditor.Graphs.dll</HintPath>
  </Reference>
   </ItemGroup>
   <ItemGroup>

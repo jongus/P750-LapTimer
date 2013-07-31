@@ -369,6 +369,9 @@ namespace tk2dEditor.SpriteCollectionEditor
 					b.dice = a.dice;
 					b.diceUnitX = a.diceUnitX;
 					b.diceUnitY = a.diceUnitY;
+					if (a.customSpriteGeometry) {
+						CopyPolyCollider(a.geometryIslands, ref b.geometryIslands);
+					}
 			});
 			
 
